@@ -92,8 +92,8 @@ export async function searchUsers(searchTerm) {
 export async function deleteUserAccount(uid) {
   if (!uid) return;
 
+  // 1. Delete Firestore profile document
   try {
-    // 1. Delete Firestore profile document
     await deleteDoc(doc(db, 'users', uid));
   } catch (err) {
     console.warn("Firestore user doc delete notice:", err?.message || err);
@@ -101,6 +101,14 @@ export async function deleteUserAccount(uid) {
 
   // 2. Delete Firebase Auth user
   if (auth.currentUser) {
-    await deleteUser(auth.currentUser);
+    try {
+      await deleteUser(auth.currentUser);
+    } catch (err) {
+      if (err?.code === 'auth/requires-recent-login' || err?.message?.includes('requires-recent-login')) {
+        await signOut(auth);
+        throw new Error("For security, please log back in to verify ownership before completing account deletion.");
+      }
+      throw err;
+    }
   }
 }

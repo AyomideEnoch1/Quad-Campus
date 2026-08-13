@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
   },
   emptyChat: {
     alignItems: 'center',
-    justify.content: 'center',
+    justifyContent: 'center',
     paddingVertical: 64,
     gap: 8,
   },
