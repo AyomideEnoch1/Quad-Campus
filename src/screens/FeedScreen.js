@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl, Alert } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
-import { subscribeFeedPosts, toggleLikePost } from '../services/feedService';
+import { subscribeFeedPosts, toggleLikePost, deletePost } from '../services/feedService';
 import CreatePostModal from '../components/CreatePostModal';
 import { FeedCardSkeleton } from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
@@ -51,6 +51,28 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
     }
   };
 
+  const handleDeletePost = (post) => {
+    Alert.alert(
+      "Delete Post",
+      "Are you sure you want to delete this post?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            setPosts(prev => prev.filter(p => p.id !== post.id));
+            try {
+              await deletePost(post.id);
+            } catch (err) {
+              console.error("Error deleting post:", err);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const renderPost = ({ item }) => (
     <View style={styles.postCard}>
       {/* Header */}
@@ -69,6 +91,12 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
           <Text style={styles.authorSub}>@{item.authorUsername} • {item.authorSchoolName}</Text>
         </View>
         <Text style={styles.timeText}>{item.createdAt}</Text>
+
+        {item.authorId === currentUser?.uid && (
+          <TouchableOpacity onPress={() => handleDeletePost(item)} style={styles.deletePostBtn}>
+            <Ionicons name="trash-outline" size={16} color={COLORS.textMuted} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Body */}
@@ -231,6 +259,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+  },
+  deletePostBtn: {
+    padding: 6,
+    marginLeft: 4,
   },
   avatar: {
     width: 40,
