@@ -96,7 +96,80 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
           </TouchableOpacity>
         </View>
 
-        {activeTab === 'overview' ? (
+        {activeTab === 'chat' && isJoined ? (
+          /* Full Page Group Chat View */
+          <KeyboardAvoidingView 
+            style={{ flex: 1, backgroundColor: COLORS.bgMain }}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          >
+            {/* Full Chat Header */}
+            <View style={styles.fullChatHeader}>
+              <TouchableOpacity onPress={() => setActiveTab('overview')} style={styles.backBtn} activeOpacity={0.7}>
+                <Ionicons name="arrow-back" size={22} color={COLORS.textMain} />
+              </TouchableOpacity>
+              <Image source={{ uri: club.logoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' }} style={styles.chatHeaderAvatar} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.chatHeaderTitle} numberOfLines={1}>{club.name}</Text>
+                <Text style={styles.chatHeaderSub}>{club.memberCount || 1} members</Text>
+              </View>
+              <TouchableOpacity onPress={onClose} style={styles.closeChatBtn}>
+                <Ionicons name="close" size={22} color={COLORS.textMain} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Message List */}
+            <FlatList
+              data={messages}
+              keyExtractor={item => item.id}
+              renderItem={renderMessage}
+              contentContainerStyle={{ padding: 14, gap: 10, paddingBottom: 20 }}
+              ListEmptyComponent={
+                <View style={styles.emptyChat}>
+                  <Ionicons name="chatbubbles-outline" size={44} color={COLORS.primary} />
+                  <Text style={styles.emptyChatTitle}>Welcome to {club.name} Chat!</Text>
+                  <Text style={styles.emptyChatText}>No messages sent yet. Be the first member to say hello!</Text>
+                </View>
+              }
+            />
+
+            {/* Input Bar */}
+            <View style={styles.inputBar}>
+              <TextInput
+                style={styles.input}
+                placeholder={`Message ${club.name}...`}
+                placeholderTextColor={COLORS.textLight}
+                value={messageText}
+                onChangeText={setMessageText}
+              />
+              <TouchableOpacity 
+                onPress={handleSendMessage}
+                disabled={!messageText.trim() || sending}
+                style={[styles.sendBtn, (!messageText.trim() || sending) && styles.sendBtnDisabled]}
+              >
+                {sending ? <ActivityIndicator color="#fff" size="small" /> : <Ionicons name="send" size={16} color="#fff" />}
+              </TouchableOpacity>
+            </View>
+          </KeyboardAvoidingView>
+        ) : activeTab === 'chat' && !isJoined ? (
+          /* Locked State if Not Joined */
+          <View style={styles.lockedContainer}>
+            <View style={styles.lockIconCircle}>
+              <Ionicons name="lock-closed" size={36} color={COLORS.primary} />
+            </View>
+            <Text style={styles.lockedTitle}>Group Chat Locked</Text>
+            <Text style={styles.lockedSubtitle}>
+              This group chat is exclusive to members of {club.name}. Join the club to view and participate in discussions!
+            </Text>
+            <TouchableOpacity 
+              onPress={() => onToggleJoin(club)}
+              style={styles.joinCta}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="person-add" size={18} color="#fff" />
+              <Text style={styles.joinCtaText}>Join Club to Unlock</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
           /* Overview Tab */
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             {/* Banner Image */}
@@ -150,67 +223,6 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
               </Text>
             </View>
           </ScrollView>
-        ) : (
-          /* Group Chat Tab */
-          <KeyboardAvoidingView 
-            style={{ flex: 1 }}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          >
-            {!isJoined ? (
-              /* Locked State if User Has Not Joined */
-              <View style={styles.lockedContainer}>
-                <View style={styles.lockIconCircle}>
-                  <Ionicons name="lock-closed" size={36} color={COLORS.primary} />
-                </View>
-                <Text style={styles.lockedTitle}>Group Chat Locked</Text>
-                <Text style={styles.lockedSubtitle}>
-                  This group chat is exclusive to members of {club.name}. Join the club to view and participate in discussions!
-                </Text>
-                <TouchableOpacity 
-                  onPress={() => onToggleJoin(club)}
-                  style={styles.joinCta}
-                  activeOpacity={0.85}
-                >
-                  <Ionicons name="person-add" size={18} color="#fff" />
-                  <Text style={styles.joinCtaText}>Join Club to Unlock</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              /* Active Real-Time Group Chat */
-              <View style={{ flex: 1 }}>
-                <FlatList
-                  data={messages}
-                  keyExtractor={item => item.id}
-                  renderItem={renderMessage}
-                  contentContainerStyle={{ padding: 14, gap: 10 }}
-                  ListEmptyComponent={
-                    <View style={styles.emptyChat}>
-                      <Ionicons name="chatbubbles-outline" size={36} color={COLORS.textMuted} />
-                      <Text style={styles.emptyChatText}>No messages yet. Say hello to fellow club members!</Text>
-                    </View>
-                  }
-                />
-
-                {/* Input Bar */}
-                <View style={styles.inputBar}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder={`Message ${club.name}...`}
-                    placeholderTextColor={COLORS.textLight}
-                    value={messageText}
-                    onChangeText={setMessageText}
-                  />
-                  <TouchableOpacity 
-                    onPress={handleSendMessage}
-                    disabled={!messageText.trim() || sending}
-                    style={[styles.sendBtn, (!messageText.trim() || sending) && styles.sendBtnDisabled]}
-                  >
-                    {sending ? <ActivityIndicator color="#fff" size="small" /> : <Ionicons name="send" size={16} color="#fff" />}
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-          </KeyboardAvoidingView>
         )}
       </SafeAreaView>
     </Modal>

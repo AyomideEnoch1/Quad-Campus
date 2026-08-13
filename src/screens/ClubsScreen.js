@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, TextInput } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeClubs, toggleJoinClub } from '../services/clubService';
@@ -71,6 +71,16 @@ export default function ClubsScreen({ clubs: initialClubs, currentUser, currentS
     </TouchableOpacity>
   );
 
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredClubs = clubs.filter(c => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return c.name?.toLowerCase().includes(q) || 
+           c.tagline?.toLowerCase().includes(q) || 
+           c.category?.toLowerCase().includes(q);
+  });
+
   return (
     <View style={styles.container}>
       {/* Top Action Header Bar */}
@@ -79,27 +89,45 @@ export default function ClubsScreen({ clubs: initialClubs, currentUser, currentS
           <Text style={styles.headerTitle}>Campus Organizations</Text>
           <Text style={styles.headerSub}>Connect with student communities & groups</Text>
         </View>
+
         <TouchableOpacity 
-          onPress={() => setShowCreateModal(true)}
+          onPress={() => setShowCreateModal(true)} 
           style={styles.createClubBtn}
-          activeOpacity={0.85}
+          activeOpacity={0.8}
         >
-          <Ionicons name="add" size={18} color="#fff" />
+          <Ionicons name="add" size={16} color="#fff" />
           <Text style={styles.createClubText}>Create Club</Text>
         </TouchableOpacity>
       </View>
 
+      {/* Search Input Bar */}
+      <View style={styles.searchBar}>
+        <Ionicons name="search-outline" size={18} color={COLORS.textMuted} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search clubs by name or interest..."
+          placeholderTextColor={COLORS.textLight}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <Ionicons name="close-circle" size={18} color={COLORS.textMuted} />
+          </TouchableOpacity>
+        )}
+      </View>
+
       <FlatList
-        data={clubs}
+        data={filteredClubs}
         keyExtractor={item => item.id}
         renderItem={renderClub}
-        contentContainerStyle={{ padding: 12, gap: 12, paddingBottom: 24 }}
+        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 24, gap: 12 }}
         ListEmptyComponent={
           <EmptyState
             icon="people-outline"
-            title="No campus clubs yet"
-            subtitle="Explore clubs from all universities or create the first student group!"
-            actionText="Create First Club"
+            title={searchQuery ? "No clubs match your search" : "No clubs available"}
+            subtitle={searchQuery ? "Try searching for a different keyword or category." : `Be the first student to create a club at ${currentSchool.shortName}!`}
+            actionText="+ Create Club"
             onAction={() => setShowCreateModal(true)}
           />
         }
@@ -219,5 +247,23 @@ const styles = StyleSheet.create({
   },
   joinedText: {
     color: COLORS.primary,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.bgCard,
+    marginHorizontal: 12,
+    marginVertical: 10,
+    borderRadius: RADIUS.full,
+    paddingHorizontal: 12,
+    height: 42,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: COLORS.borderColor,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 13,
+    color: COLORS.textMain,
   }
 });

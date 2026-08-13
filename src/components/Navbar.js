@@ -10,8 +10,11 @@ export default function Navbar({
   unreadNotifications, 
   onOpenSearch, 
   onOpenNotifications,
-  onOpenVerification
+  onOpenVerification,
+  currentUser
 }) {
+  const isSuperAdmin = currentUser?.role === 'super_admin' || currentUser?.roles?.includes('super_admin');
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -19,15 +22,22 @@ export default function Navbar({
         <View style={styles.leftSection}>
           <QuadLogo height={24} showText={true} />
 
-          <TouchableOpacity 
-            onPress={onOpenSchoolPicker} 
-            style={styles.schoolPill}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="school-outline" size={14} color={COLORS.primary} />
-            <Text style={styles.schoolText} numberOfLines={1}>{currentSchool.shortName}</Text>
-            <Feather name="chevron-down" size={14} color={COLORS.textMuted} />
-          </TouchableOpacity>
+          {isSuperAdmin ? (
+            <TouchableOpacity 
+              onPress={onOpenSchoolPicker} 
+              style={styles.schoolPill}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="school-outline" size={14} color={COLORS.primary} />
+              <Text style={styles.schoolText} numberOfLines={1}>{currentSchool.shortName}</Text>
+              <Feather name="chevron-down" size={14} color={COLORS.textMuted} />
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.schoolPillStatic}>
+              <Ionicons name="school-outline" size={14} color={COLORS.primary} />
+              <Text style={styles.schoolText} numberOfLines={1}>{currentSchool.shortName}</Text>
+            </View>
+          )}
 
           <TouchableOpacity 
             onPress={onOpenVerification}
@@ -89,6 +99,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   schoolPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: COLORS.bgInput,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.full,
+  },
+  schoolPillStatic: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,

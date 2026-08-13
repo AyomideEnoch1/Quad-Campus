@@ -7,7 +7,15 @@ import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { markItemSold, deleteListing, updateListing } from '../services/marketService';
 
-export default function ItemDetailModal({ visible, onClose, item, currentUser, onStartChat }) {
+export default function ItemDetailModal({ 
+  visible, 
+  onClose, 
+  item, 
+  currentUser, 
+  onStartChat, 
+  onItemUpdated,
+  onOpenVendorStorefront 
+}) {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
@@ -194,8 +202,14 @@ export default function ItemDetailModal({ visible, onClose, item, currentUser, o
                 <Text style={styles.price}>₦{typeof item.price === 'number' ? item.price.toLocaleString() : item.price}</Text>
               </View>
 
-              {/* Seller Card */}
-              <View style={styles.sellerCard}>
+              {/* Seller Card (Clickable Storefront Trigger) */}
+              <TouchableOpacity 
+                onPress={() => {
+                  if (onOpenVendorStorefront) onOpenVendorStorefront(item);
+                }} 
+                style={styles.sellerCard}
+                activeOpacity={0.85}
+              >
                 <Image 
                   source={{ uri: item.sellerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' }} 
                   style={styles.sellerAvatar} 
@@ -207,13 +221,10 @@ export default function ItemDetailModal({ visible, onClose, item, currentUser, o
                     <Text style={styles.sellerSchool}>{item.sellerSchoolName || 'Campus Seller'}</Text>
                   </View>
                 </View>
-                {item.location && (
-                  <View style={styles.locationTag}>
-                    <Ionicons name="location-outline" size={14} color={COLORS.primary} />
-                    <Text style={styles.locationText}>{item.location}</Text>
-                  </View>
-                )}
-              </View>
+                <View style={styles.storefrontBadge}>
+                  <Text style={styles.storefrontBadgeText}>View Store ➔</Text>
+                </View>
+              </TouchableOpacity>
 
               {/* Item Description / Overview */}
               <View style={styles.descriptionSection}>
@@ -473,5 +484,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '800',
     fontSize: 15,
+  },
+  storefrontBadge: {
+    backgroundColor: COLORS.primaryLight,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.full,
+  },
+  storefrontBadgeText: {
+    color: COLORS.primary,
+    fontSize: 11,
+    fontWeight: '800',
   }
 });

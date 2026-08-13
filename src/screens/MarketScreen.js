@@ -5,6 +5,7 @@ import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeMarketplaceItems } from '../services/marketService';
 import CreateItemModal from '../components/CreateItemModal';
 import ItemDetailModal from '../components/ItemDetailModal';
+import VendorStorefrontModal from '../components/VendorStorefrontModal';
 import { MarketCardSkeleton } from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
 
@@ -15,6 +16,7 @@ export default function MarketScreen({ items: initialItems, currentUser, current
   const [loading, setLoading] = useState(true);
   const [showItemModal, setShowItemModal] = useState(false);
   const [selectedDetailItem, setSelectedDetailItem] = useState(null);
+  const [selectedVendor, setSelectedVendor] = useState(null);
 
   const categories = ['All', 'Textbooks', 'Tech', 'Dorm Gear', 'Tickets'];
 
@@ -139,6 +141,15 @@ export default function MarketScreen({ items: initialItems, currentUser, current
         onClose={() => setSelectedDetailItem(null)}
         currentUser={currentUser}
         onStartChat={onStartChatWithSeller}
+        onOpenVendorStorefront={(vendorItem) => setSelectedVendor(vendorItem)}
+      />
+
+      <VendorStorefrontModal
+        visible={!!selectedVendor}
+        seller={selectedVendor}
+        items={items}
+        onClose={() => setSelectedVendor(null)}
+        onSelectListing={(item) => setSelectedDetailItem(item)}
       />
     </View>
   );

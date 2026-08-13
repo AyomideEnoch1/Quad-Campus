@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  Modal, View, Text, StyleSheet, FlatList, Image, TouchableOpacity, SafeAreaView
+  Modal, View, Text, StyleSheet, FlatList, Image, TouchableOpacity, SafeAreaView, Alert
 } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 
-const MOCK_NOTIFICATIONS = [
+const INITIAL_NOTIFICATIONS = [
   {
     id: 'n1',
     title: 'New Like on your post',
@@ -36,8 +36,38 @@ const MOCK_NOTIFICATIONS = [
 ];
 
 export default function NotificationsModal({ visible, onClose }) {
+  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+
+  const handleMarkAllRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    Alert.alert("Marked All as Read ✅", "All unread notifications have been marked as read.");
+  };
+
+  const handleClearAll = () => {
+    Alert.alert(
+      "Clear All Notifications",
+      "Are you sure you want to clear all notifications?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Clear All", 
+          style: "destructive", 
+          onPress: () => setNotifications([]) 
+        }
+      ]
+    );
+  };
+
+  const handleToggleRead = (id) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  };
+
   const renderItem = ({ item }) => (
-    <View style={[styles.notifCard, !item.read && styles.notifUnread]}>
+    <TouchableOpacity 
+      onPress={() => handleToggleRead(item.id)}
+      style={[styles.notifCard, !item.read && styles.notifUnread]}
+      activeOpacity={0.85}
+    >
       <Image source={{ uri: item.avatar }} style={styles.avatar} />
       <View style={{ flex: 1, gap: 2 }}>
         <Text style={styles.notifTitle}>{item.title}</Text>
@@ -45,26 +75,48 @@ export default function NotificationsModal({ visible, onClose }) {
         <Text style={styles.notifTime}>{item.time}</Text>
       </View>
       {!item.read && <View style={styles.blueDot} />}
-    </View>
+    </TouchableOpacity>
   );
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       <SafeAreaView style={styles.container}>
-        {/* Header */}
+        {/* Header Bar */}
         <View style={styles.topBar}>
-          <TouchableOpacity onPress={onClose} style={styles.backBtn}>
+          <TouchableOpacity onPress={onClose} style={styles.backBtn} activeOpacity={0.7}>
             <Ionicons name="arrow-back" size={22} color={COLORS.textMain} />
           </TouchableOpacity>
           <Text style={styles.topTitle}>Notifications</Text>
           <View style={{ width: 36 }} />
         </View>
 
+        {/* Action Controls Bar */}
+        {notifications.length > 0 && (
+          <View style={styles.actionRow}>
+            <TouchableOpacity onPress={handleMarkAllRead} style={styles.actionBtn}>
+              <Ionicons name="checkmark-done-outline" size={16} color={COLORS.primary} />
+              <Text style={styles.actionText}>Mark all as read</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={handleClearAll} style={styles.actionBtn}>
+              <Ionicons name="trash-outline" size={15} color="#EF4444" />
+              <Text style={[styles.actionText, { color: '#EF4444' }]}>Clear all</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <FlatList
-          data={MOCK_NOTIFICATIONS}
+          data={notifications}
           keyExtractor={item => item.id}
           renderItem={renderItem}
-          contentContainerStyle={{ padding: 14, gap: 10 }}
+          contentContainerStyle={{ padding: 14, gap: 10, paddingBottom: 40 }}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Ionicons name="notifications-off-outline" size={48} color={COLORS.textLight} />
+              <Text style={styles.emptyTitle}>No Notifications</Text>
+              <Text style={styles.emptySub}>You are all caught up! New notifications will appear here.</Text>
+            </View>
+          }
         />
       </SafeAreaView>
     </Modal>
@@ -98,6 +150,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     color: COLORS.textMain,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justify.content: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: COLORS.bgCard,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.borderColor,
+  },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  actionText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.primary,
   },
   notifCard: {
     flexDirection: 'row',
@@ -138,5 +212,21 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: COLORS.primary,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justify.content: 'center',
+    paddingVertical: 64,
+    gap: 8,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: COLORS.textMain,
+  },
+  emptySub: {
+    fontSize: 13,
+    color: COLORS.textMuted,
+    textAlign: 'center',
   }
 });

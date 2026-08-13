@@ -37,6 +37,7 @@ import {
 import { COLORS } from './src/constants/theme';
 
 import NotificationsModal from './src/components/NotificationsModal';
+import GlobalSearchModal from './src/components/GlobalSearchModal';
 
 const Tab = createBottomTabNavigator();
 
@@ -53,15 +54,17 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
 
   const [showSchoolPicker, setShowSchoolPicker] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
 
   return (
     <NavigationContainer>
       <StatusBar style="dark" />
       <Navbar
         currentSchool={currentSchool}
+        currentUser={currentUser}
         onOpenSchoolPicker={() => setShowSchoolPicker(true)}
         unreadNotifications={2}
-        onOpenSearch={() => alert('Search overlay')}
+        onOpenSearch={() => setShowSearch(true)}
         onOpenNotifications={() => setShowNotifications(true)}
         onOpenVerification={() =>
           setCurrentUser({ ...currentUser, isVerifiedSchool: true })
@@ -78,6 +81,14 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
       <NotificationsModal
         visible={showNotifications}
         onClose={() => setShowNotifications(false)}
+      />
+
+      <GlobalSearchModal
+        visible={showSearch}
+        onClose={() => setShowSearch(false)}
+        posts={posts}
+        marketplaceItems={items}
+        clubs={clubs}
       />
 
       <Tab.Navigator
