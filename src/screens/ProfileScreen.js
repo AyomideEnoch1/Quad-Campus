@@ -6,6 +6,7 @@ import { auth } from '../config/firebase';
 import { signOut } from 'firebase/auth';
 import { deleteUserAccount } from '../services/userService';
 import EditProfileModal from '../components/EditProfileModal';
+import RoleBadge from '../components/RoleBadge';
 
 export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerification, onSignOut }) {
   const [showEditModal, setShowEditModal] = useState(false);
@@ -72,7 +73,10 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
           )}
         </View>
 
-        <Text style={styles.name}>{currentUser.displayName}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Text style={styles.name}>{currentUser.displayName}</Text>
+          <RoleBadge role={currentUser.role || (currentUser.roles ? currentUser.roles[0] : 'student')} size={18} />
+        </View>
         <Text style={styles.username}>@{currentUser.username}</Text>
 
         <View style={styles.schoolPill}>

@@ -9,6 +9,7 @@ import CreatePostModal from '../components/CreatePostModal';
 import CommentsModal from '../components/CommentsModal';
 import { FeedCardSkeleton } from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
+import RoleBadge from '../components/RoleBadge';
 
 export default function FeedScreen({ posts: initialPosts, currentSchool, currentUser, onOpenPostModal }) {
   const [feedScope, setFeedScope] = useState('my_school'); // 'my_school' | 'all_schools'
@@ -142,14 +143,9 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
         <View style={styles.authorRow}>
           <Image source={{ uri: avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' }} style={styles.avatar} />
           <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
               <Text style={styles.authorName}>{authorName}</Text>
-              {item.isVerifiedAuthor && (
-                <View style={styles.verifiedTag}>
-                  <Ionicons name="shield-checkmark" size={10} color="#fff" />
-                  <Text style={styles.verifiedText}>.edu</Text>
-                </View>
-              )}
+              <RoleBadge role={item.authorRole || 'student'} size={15} />
             </View>
             <Text style={styles.authorSub}>@{authorUsername} • {item.authorSchoolName}</Text>
           </View>

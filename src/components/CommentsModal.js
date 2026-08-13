@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeComments, addComment } from '../services/commentService';
+import RoleBadge from './RoleBadge';
 
 export default function CommentsModal({ visible, onClose, post, currentUser }) {
   const [comments, setComments] = useState([]);
@@ -45,7 +46,10 @@ export default function CommentsModal({ visible, onClose, post, currentUser }) {
       <Image source={{ uri: item.authorAvatar }} style={styles.commentAvatar} />
       <View style={styles.commentBubble}>
         <View style={styles.commentHeader}>
-          <Text style={styles.commentAuthor}>{item.authorName}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Text style={styles.commentAuthor}>{item.authorName}</Text>
+            <RoleBadge role={item.authorRole || 'student'} size={13} />
+          </View>
           <Text style={styles.commentTime}>{item.createdAt}</Text>
         </View>
         <Text style={styles.commentText}>{item.text}</Text>
