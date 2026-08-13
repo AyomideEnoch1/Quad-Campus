@@ -2,6 +2,7 @@
   "expo": {
     "name": "QUAD",
     "slug": "quad-campus-app",
+    "owner": "ayomide_enoch-2",
     "scheme": "quad",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -32,6 +33,11 @@
     "plugins": [
       "expo-font",
       "expo-web-browser"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "d53b2657-455c-4c1b-b3a7-7e1195e09cc2"
+      }
+    }
   }
 }
