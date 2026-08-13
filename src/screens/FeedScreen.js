@@ -11,7 +11,7 @@ import { FeedCardSkeleton } from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
 import RoleBadge from '../components/RoleBadge';
 import AdComposerModal from '../components/AdComposerModal';
-import AdsReviewScreen from './AdsReviewScreen';
+import { createNotificationEvent } from '../services/notificationService';
 
 export default function FeedScreen({ posts: initialPosts, currentSchool, currentUser, onOpenPostModal }) {
   const [feedScope, setFeedScope] = useState('my_school'); // 'my_school' | 'all_schools'
@@ -100,14 +100,25 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
   };
 
   const handleLike = async (post) => {
+    const isNowLiked = !post.isLiked;
+
     // Optimistic UI update
     setPosts(prev => prev.map(p => {
       if (p.id === post.id) {
-        const isLiked = !p.isLiked;
-        return { ...p, isLiked, likesCount: isLiked ? p.likesCount + 1 : p.likesCount - 1 };
+        return { ...p, isLiked: isNowLiked, likesCount: isNowLiked ? p.likesCount + 1 : p.likesCount - 1 };
       }
       return p;
     }));
+
+    if (isNowLiked && post.authorId && post.authorId !== currentUser?.uid) {
+      createNotificationEvent({
+        userId: post.authorId,
+        title: 'New Like ❤️',
+        message: `${currentUser?.displayName || 'A student'} liked your post.`,
+        type: 'like',
+        avatar: currentUser?.avatarUrl
+      });
+    }
 
     try {
       await toggleLikePost(post.id, currentUser.uid, post.isLiked);

@@ -35,11 +35,24 @@ const INITIAL_NOTIFICATIONS = [
   }
 ];
 
-export default function NotificationsModal({ visible, onClose }) {
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+export default function NotificationsModal({ 
+  visible, 
+  onClose,
+  notifications: parentNotifications,
+  onMarkAllRead: parentMarkAllRead,
+  onClearAll: parentClearAll,
+  onToggleRead: parentToggleRead
+}) {
+  const [internalNotifications, setInternalNotifications] = useState(INITIAL_NOTIFICATIONS);
+
+  const notifications = parentNotifications || internalNotifications;
 
   const handleMarkAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    if (parentMarkAllRead) {
+      parentMarkAllRead();
+    } else {
+      setInternalNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    }
     Alert.alert("Marked All as Read ✅", "All unread notifications have been marked as read.");
   };
 
@@ -52,14 +65,24 @@ export default function NotificationsModal({ visible, onClose }) {
         { 
           text: "Clear All", 
           style: "destructive", 
-          onPress: () => setNotifications([]) 
+          onPress: () => {
+            if (parentClearAll) {
+              parentClearAll();
+            } else {
+              setInternalNotifications([]);
+            }
+          }
         }
       ]
     );
   };
 
   const handleToggleRead = (id) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    if (parentToggleRead) {
+      parentToggleRead(id);
+    } else {
+      setInternalNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    }
   };
 
   const renderItem = ({ item }) => (

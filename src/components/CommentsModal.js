@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeComments, addComment } from '../services/commentService';
 import RoleBadge from './RoleBadge';
+import { createNotificationEvent } from '../services/notificationService';
 
 export default function CommentsModal({ visible, onClose, post, currentUser }) {
   const [comments, setComments] = useState([]);
@@ -26,6 +27,16 @@ export default function CommentsModal({ visible, onClose, post, currentUser }) {
     const textToSend = commentText.trim();
     setCommentText('');
     setSubmitting(true);
+
+    if (post?.authorId && post.authorId !== currentUser?.uid) {
+      createNotificationEvent({
+        userId: post.authorId,
+        title: 'New Comment 💬',
+        message: `${currentUser?.displayName || 'A student'} commented: "${textToSend.slice(0, 40)}"`,
+        type: 'comment',
+        avatar: currentUser?.avatarUrl
+      });
+    }
 
     try {
       await addComment(post.id, {

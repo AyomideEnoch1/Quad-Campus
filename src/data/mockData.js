@@ -101,22 +101,24 @@ export const SCHOOLS = [
 ];
 
 export const CURRENT_USER = {
-  uid: 'usr_jenny',
-  displayName: 'Jenny Wilson',
-  username: 'jenny_wilson',
-  email: 'jenny@harvard.edu',
-  schoolId: 'harvard_univ',
-  schoolName: 'Harvard University',
+  uid: 'usr_ayomide',
+  displayName: 'Ayomide Enoch',
+  username: 'ayomidenoch',
+  email: 'ayomidenoch15@gmail.com',
+  role: 'super_admin',
+  roles: ['super_admin', 'student'],
+  schoolId: 'unilag',
+  schoolName: 'University of Lagos',
   isVerifiedSchool: true,
-  major: 'Computer Science & AI',
+  major: 'Computer Science',
   gradYear: 2026,
-  bio: 'CS \'26 | Tech Lead @ QUAD Society 🚀 | Photographer & Tech enthusiast. Always down for hackathons!',
+  bio: 'Super Admin @ QUAD Super-App 🚀',
   avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
   bannerUrl: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop&q=80',
-  followersCount: 672,
-  followingCount: 248,
-  likesReceived: 27700,
-  reputationScore: 99
+  followersCount: 1250,
+  followingCount: 420,
+  likesReceived: 35400,
+  reputationScore: 100
 };
 
 export const INITIAL_POSTS = [

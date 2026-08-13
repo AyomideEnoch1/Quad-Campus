@@ -38,6 +38,7 @@ import { COLORS } from './src/constants/theme';
 
 import NotificationsModal from './src/components/NotificationsModal';
 import GlobalSearchModal from './src/components/GlobalSearchModal';
+import { INITIAL_NOTIFICATIONS, subscribeUserNotifications } from './src/services/notificationService';
 
 const Tab = createBottomTabNavigator();
 
@@ -51,10 +52,23 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
   const [clubs, setClubs] = useState(INITIAL_CLUBS);
   const [chats, setChats] = useState(INITIAL_CHATS);
   const [activeChat, setActiveChat] = useState(null);
+  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
 
   const [showSchoolPicker, setShowSchoolPicker] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    const unsub = subscribeUserNotifications(currentUser.uid, (liveNotifs) => {
+      if (liveNotifs && liveNotifs.length > 0) {
+        setNotifications(liveNotifs);
+      }
+    });
+    return unsub;
+  }, [currentUser?.uid]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <NavigationContainer>
@@ -63,7 +77,7 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
         currentSchool={currentSchool}
         currentUser={currentUser}
         onOpenSchoolPicker={() => setShowSchoolPicker(true)}
-        unreadNotifications={2}
+        unreadNotifications={unreadCount}
         onOpenSearch={() => setShowSearch(true)}
         onOpenNotifications={() => setShowNotifications(true)}
         onOpenVerification={() =>
@@ -81,6 +95,10 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
       <NotificationsModal
         visible={showNotifications}
         onClose={() => setShowNotifications(false)}
+        notifications={notifications}
+        onMarkAllRead={() => setNotifications(prev => prev.map(n => ({ ...n, read: true })))}
+        onClearAll={() => setNotifications([])}
+        onToggleRead={(id) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))}
       />
 
       <GlobalSearchModal
@@ -203,14 +221,17 @@ export default function App() {
           const userDoc = await getDoc(doc(db, 'users', user.uid));
           if (userDoc.exists()) {
             const data = userDoc.data();
+            const isSuperAdminEmail = user.email?.toLowerCase() === 'ayomidenoch15@gmail.com';
             const userProfile = {
               uid: user.uid,
               email: user.email,
+              role: isSuperAdminEmail ? 'super_admin' : (data.role || 'student'),
+              roles: isSuperAdminEmail ? ['super_admin', 'student'] : (data.roles || ['student']),
               displayName: data.displayName || user.email?.split('@')[0] || 'Student',
               username: data.username || user.email?.split('@')[0].toLowerCase() || 'student',
               schoolId: data.schoolId || SCHOOLS[0].id,
               schoolName: data.schoolName || SCHOOLS[0].name,
-              isVerifiedSchool: !!data.isVerifiedSchool,
+              isVerifiedSchool: isSuperAdminEmail ? true : !!data.isVerifiedSchool,
               bio: data.bio || `Student @ ${data.schoolName || 'University'}`,
               major: data.major || 'General Studies',
               gradYear: data.gradYear || 2026,

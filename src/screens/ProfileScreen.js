@@ -125,37 +125,39 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
           </View>
         </View>
 
-        {/* Active Account Role Switcher */}
-        <View style={styles.roleSection}>
-          <Text style={styles.roleSectionTitle}>Active Account Role Badge</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.roleRow}>
-            {[
-              { id: 'student', name: 'Student' },
-              { id: 'club_admin', name: 'Club Admin' },
-              { id: 'school_admin', name: 'School Admin' },
-              { id: 'super_admin', name: 'Super Admin' },
-              { id: 'advertiser', name: 'Advertiser' },
-              { id: 'ads_reviewer', name: 'Ads Reviewer' },
-            ].map(r => {
-              const currentRole = currentUser.role || 'student';
-              const isSelected = currentRole === r.id;
-              return (
-                <TouchableOpacity
-                  key={r.id}
-                  onPress={() => {
-                    if (setCurrentUser) {
-                      setCurrentUser(prev => ({ ...prev, role: r.id }));
-                    }
-                  }}
-                  style={[styles.rolePill, isSelected && styles.rolePillActive]}
-                >
-                  <RoleBadge role={r.id} size={14} />
-                  <Text style={[styles.rolePillText, isSelected && styles.rolePillTextActive]}>{r.name}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
+        {/* Active Account Role Switcher (Super Admin Only) */}
+        {(currentUser?.role === 'super_admin' || currentUser?.roles?.includes('super_admin') || currentUser?.email?.toLowerCase() === 'ayomidenoch15@gmail.com') && (
+          <View style={styles.roleSection}>
+            <Text style={styles.roleSectionTitle}>Active Account Role Badge (Super Admin Tool)</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.roleRow}>
+              {[
+                { id: 'student', name: 'Student' },
+                { id: 'club_admin', name: 'Club Admin' },
+                { id: 'school_admin', name: 'School Admin' },
+                { id: 'super_admin', name: 'Super Admin' },
+                { id: 'advertiser', name: 'Advertiser' },
+                { id: 'ads_reviewer', name: 'Ads Reviewer' },
+              ].map(r => {
+                const currentRole = currentUser.role || 'student';
+                const isSelected = currentRole === r.id;
+                return (
+                  <TouchableOpacity
+                    key={r.id}
+                    onPress={() => {
+                      if (setCurrentUser) {
+                        setCurrentUser(prev => ({ ...prev, role: r.id }));
+                      }
+                    }}
+                    style={[styles.rolePill, isSelected && styles.rolePillActive]}
+                  >
+                    <RoleBadge role={r.id} size={14} />
+                    <Text style={[styles.rolePillText, isSelected && styles.rolePillTextActive]}>{r.name}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
 
         {/* Action Buttons */}
         <View style={styles.btnRow}>
