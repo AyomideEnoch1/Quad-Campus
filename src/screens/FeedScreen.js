@@ -46,6 +46,7 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
   const [activeAds, setActiveAds] = useState([]);
   const [showAdComposer, setShowAdComposer] = useState(false);
   const [showAdsReview, setShowAdsReview] = useState(false);
+  const [menuPost, setMenuPost] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -240,23 +241,9 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
           </View>
           <Text style={styles.timeText}>{item.createdAt}</Text>
 
-          {isMe && (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              {item.scope === 'my_school' && (
-                <TouchableOpacity 
-                  onPress={() => handleBroadcastToAllCampuses(item)}
-                  style={styles.broadcastTagBtn}
-                >
-                  <Ionicons name="globe-outline" size={13} color={COLORS.primary} />
-                  <Text style={styles.broadcastTagText}>Broadcast</Text>
-                </TouchableOpacity>
-              )}
-
-              <TouchableOpacity onPress={() => handleDeletePost(item)} style={styles.deletePostBtn}>
-                <Ionicons name="trash-outline" size={16} color={COLORS.textMuted} />
-              </TouchableOpacity>
-            </View>
-          )}
+          <TouchableOpacity onPress={() => setMenuPost(item)} style={styles.morePostBtn}>
+            <Feather name="more-horizontal" size={18} color={COLORS.textMuted} />
+          </TouchableOpacity>
         </View>
 
       {/* Body */}
@@ -380,6 +367,57 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
         onClose={() => setShowAdsReview(false)}
         currentUser={currentUser}
       />
+
+      {/* Post Options 3-Dots Dropdown Modal */}
+      <Modal visible={!!menuPost} animationType="fade" transparent onRequestClose={() => setMenuPost(null)}>
+        <TouchableOpacity style={styles.menuOverlay} activeOpacity={1} onPress={() => setMenuPost(null)}>
+          <View style={styles.menuSheet} onStartShouldSetResponder={() => true}>
+            <Text style={styles.menuTitle}>Post Options</Text>
+
+            {menuPost?.authorId === currentUser?.uid && menuPost?.scope === 'my_school' && (
+              <>
+                <TouchableOpacity 
+                  onPress={() => {
+                    const target = menuPost;
+                    setMenuPost(null);
+                    handleBroadcastToAllCampuses(target);
+                  }}
+                  style={styles.menuItem}
+                >
+                  <Ionicons name="globe-outline" size={18} color={COLORS.primary} />
+                  <Text style={styles.menuItemText}>Broadcast to All Campuses 🌐</Text>
+                </TouchableOpacity>
+                <View style={styles.menuDivider} />
+              </>
+            )}
+
+            {menuPost?.authorId === currentUser?.uid ? (
+              <TouchableOpacity 
+                onPress={() => {
+                  const target = menuPost;
+                  setMenuPost(null);
+                  handleDeletePost(target);
+                }}
+                style={styles.menuItem}
+              >
+                <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                <Text style={[styles.menuItemText, { color: '#EF4444' }]}>Delete Post</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity 
+                onPress={() => {
+                  setMenuPost(null);
+                  Alert.alert("Report Received", "Thank you for helping keep QUAD safe. Our team will review this post.");
+                }}
+                style={styles.menuItem}
+              >
+                <Ionicons name="flag-outline" size={18} color="#EF4444" />
+                <Text style={[styles.menuItemText, { color: '#EF4444' }]}>Report Inappropriate Post</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -544,5 +582,45 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 13,
     fontWeight: '800',
+  },
+  morePostBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  menuSheet: {
+    backgroundColor: COLORS.bgCard,
+    borderTopLeftRadius: RADIUS.xl,
+    borderTopRightRadius: RADIUS.xl,
+    padding: 20,
+    gap: 12,
+  },
+  menuTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: COLORS.textMain,
+    marginBottom: 4,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+  },
+  menuItemText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.textMain,
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: COLORS.borderColor,
   }
 });

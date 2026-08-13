@@ -60,10 +60,21 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
     );
   };
 
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
-      {/* Banner */}
-      <Image source={{ uri: currentUser.bannerUrl || 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop&q=80' }} style={styles.banner} />
+      {/* Banner with 3-Dots Settings Menu */}
+      <View style={{ position: 'relative' }}>
+        <Image source={{ uri: currentUser.bannerUrl || 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop&q=80' }} style={styles.banner} />
+        <TouchableOpacity 
+          onPress={() => setShowSettingsMenu(true)} 
+          style={styles.topMenuBtn}
+          activeOpacity={0.8}
+        >
+          <Feather name="more-vertical" size={20} color="#fff" />
+        </TouchableOpacity>
+      </View>
 
       {/* Main Profile Info */}
       <View style={styles.headerCard}>
@@ -114,7 +125,7 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
           </View>
         </View>
 
-        {/* Role Preview Switcher */}
+        {/* Active Account Role Switcher */}
         <View style={styles.roleSection}>
           <Text style={styles.roleSectionTitle}>Active Account Role Badge</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.roleRow}>
@@ -162,16 +173,41 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
             <Ionicons name="checkmark-done-circle-outline" size={14} color="#fff" />
             <Text style={styles.editBtnText}>Review Queue</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity onPress={handleSignOut} style={styles.signOutBtn}>
-            <Feather name="log-out" size={14} color={COLORS.primary} />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={handleDeleteAccount} style={[styles.signOutBtn, { backgroundColor: '#FEE2E2', borderColor: '#FCA5A5' }]}>
-            <Ionicons name="trash-outline" size={14} color="#EF4444" />
-          </TouchableOpacity>
         </View>
       </View>
+
+      {/* 3-Dots Settings Popup Modal */}
+      <Modal visible={showSettingsMenu} animationType="fade" transparent onRequestClose={() => setShowSettingsMenu(false)}>
+        <TouchableOpacity style={styles.settingsOverlay} activeOpacity={1} onPress={() => setShowSettingsMenu(false)}>
+          <View style={styles.settingsSheet} onStartShouldSetResponder={() => true}>
+            <Text style={styles.settingsTitle}>Account Settings</Text>
+
+            <TouchableOpacity 
+              onPress={() => {
+                setShowSettingsMenu(false);
+                handleSignOut();
+              }}
+              style={styles.settingsItem}
+            >
+              <Feather name="log-out" size={18} color={COLORS.primary} />
+              <Text style={styles.settingsItemText}>Sign Out</Text>
+            </TouchableOpacity>
+
+            <View style={styles.settingsDivider} />
+
+            <TouchableOpacity 
+              onPress={() => {
+                setShowSettingsMenu(false);
+                handleDeleteAccount();
+              }}
+              style={styles.settingsItem}
+            >
+              <Ionicons name="trash-outline" size={18} color="#EF4444" />
+              <Text style={[styles.settingsItemText, { color: '#EF4444' }]}>Delete Account Permanently</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       <EditProfileModal
         visible={showEditModal}
@@ -380,13 +416,48 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primaryLight,
     borderColor: COLORS.primary,
   },
-  rolePillText: {
-    fontSize: 12,
-    color: COLORS.textMuted,
-    fontWeight: '600',
+  topMenuBtn: {
+    position: 'absolute',
+    top: 14,
+    right: 14,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  rolePillTextActive: {
-    color: COLORS.primary,
+  settingsOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  settingsSheet: {
+    backgroundColor: COLORS.bgCard,
+    borderTopLeftRadius: RADIUS.xl,
+    borderTopRightRadius: RADIUS.xl,
+    padding: 20,
+    gap: 14,
+  },
+  settingsTitle: {
+    fontSize: 16,
     fontWeight: '800',
+    color: COLORS.textMain,
+    marginBottom: 4,
+  },
+  settingsItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+  },
+  settingsItemText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.textMain,
+  },
+  settingsDivider: {
+    height: 1,
+    backgroundColor: COLORS.borderColor,
   }
 });
