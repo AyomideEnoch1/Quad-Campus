@@ -37,6 +37,7 @@ export default function AuthScreen({ onSignUp, onLogin }) {
   const [password, setPassword] = useState('');
   const [selectedSchool, setSelectedSchool] = useState(null);
   const [showPicker, setShowPicker] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const isValid =
@@ -150,14 +151,27 @@ export default function AuthScreen({ onSignUp, onLogin }) {
 
           <View>
             <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="••••••••"
-              placeholderTextColor={BRAND.SLATE}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="••••••••"
+                placeholderTextColor={BRAND.SLATE}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity 
+                onPress={() => setShowPassword(!showPassword)} 
+                style={styles.eyeBtn}
+                activeOpacity={0.7}
+              >
+                <Ionicons 
+                  name={showPassword ? "eye-off-outline" : "eye-outline"} 
+                  size={20} 
+                  color={BRAND.SLATE} 
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {mode === 'signup' && (
@@ -321,6 +335,25 @@ const styles = StyleSheet.create({
     color: BRAND.INK,
     backgroundColor: '#fff',
     justifyContent: 'center',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: BRAND.LINE,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    paddingRight: 10,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 13,
+    color: BRAND.INK,
+  },
+  eyeBtn: {
+    padding: 4,
   },
   pickerText: {
     fontSize: 13,
