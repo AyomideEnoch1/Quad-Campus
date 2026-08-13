@@ -16,6 +16,7 @@ import {
   signInWithCredential
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import SchoolPickerModal from '../components/SchoolPickerModal';
 
 function QMark({ size = 38 }) {
   const sw = size * 0.16;
@@ -234,50 +235,13 @@ export default function AuthScreen({ onSignUp, onLogin }) {
         </View>
       </ScrollView>
 
-      {/* School picker modal */}
-      <Modal
+      {/* Searchable School picker modal */}
+      <SchoolPickerModal
         visible={showPicker}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setShowPicker(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowPicker(false)}
-        >
-          <View style={styles.pickerSheet}>
-            <Text style={styles.pickerTitle}>Select your school</Text>
-            <FlatList
-              data={SCHOOLS}
-              keyExtractor={item => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[
-                    styles.pickerItem,
-                    selectedSchool?.id === item.id && styles.pickerItemActive,
-                  ]}
-                  onPress={() => {
-                    setSelectedSchool(item);
-                    setShowPicker(false);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.pickerItemText,
-                      selectedSchool?.id === item.id && styles.pickerItemTextActive,
-                    ]}
-                  >
-                    {item.name}
-                  </Text>
-                  <Text style={styles.pickerItemDomain}>@{item.domain}</Text>
-                </TouchableOpacity>
-              )}
-              ItemSeparatorComponent={() => <View style={styles.divider} />}
-            />
-          </View>
-        </TouchableOpacity>
-      </Modal>
+        onClose={() => setShowPicker(false)}
+        selectedSchool={selectedSchool}
+        onSelectSchool={(school) => setSelectedSchool(school)}
+      />
     </KeyboardAvoidingView>
   );
 }

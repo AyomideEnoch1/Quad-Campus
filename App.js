@@ -18,6 +18,7 @@ import { registerForPushNotificationsAsync } from './src/utils/notifications';
 
 // Main app screens
 import Navbar from './src/components/Navbar';
+import SchoolPickerModal from './src/components/SchoolPickerModal';
 import FeedScreen from './src/screens/FeedScreen';
 import MarketScreen from './src/screens/MarketScreen';
 import ChatScreen from './src/screens/ChatScreen';
@@ -46,22 +47,27 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
   const [chats, setChats] = useState(INITIAL_CHATS);
   const [activeChat, setActiveChat] = useState(null);
 
+  const [showSchoolPicker, setShowSchoolPicker] = useState(false);
+
   return (
     <NavigationContainer>
       <StatusBar style="dark" />
       <Navbar
         currentSchool={currentSchool}
-        onOpenSchoolPicker={() => {
-          const nextIndex =
-            (SCHOOLS.findIndex(s => s.id === currentSchool.id) + 1) % SCHOOLS.length;
-          setCurrentSchool(SCHOOLS[nextIndex]);
-        }}
+        onOpenSchoolPicker={() => setShowSchoolPicker(true)}
         unreadNotifications={1}
         onOpenSearch={() => alert('Search overlay')}
         onOpenNotifications={() => alert('Notifications list')}
         onOpenVerification={() =>
           setCurrentUser({ ...currentUser, isVerifiedSchool: true })
         }
+      />
+
+      <SchoolPickerModal
+        visible={showSchoolPicker}
+        onClose={() => setShowSchoolPicker(false)}
+        selectedSchool={currentSchool}
+        onSelectSchool={(school) => setCurrentSchool(school)}
       />
 
       <Tab.Navigator
