@@ -1,12 +1,15 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, ScrollView, Platform, KeyboardAvoidingView,
-  Modal, FlatList,
+  Modal, FlatList, ActivityIndicator, Alert
 } from 'react-native';
 import Svg, { Circle, Line as SvgLine } from 'react-native-svg';
 import { BRAND } from '../constants/theme';
 import { SCHOOLS } from '../data/mockData';
+import { auth, db } from '../config/firebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 function QMark({ size = 38 }) {
   const sw = size * 0.16;
@@ -27,17 +30,47 @@ export default function AuthScreen({ onSignUp, onLogin }) {
   const [password, setPassword] = useState('');
   const [selectedSchool, setSelectedSchool] = useState(null);
   const [showPicker, setShowPicker] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const isValid =
     email.length > 0 &&
     password.length >= 6 &&
     (mode === 'login' || selectedSchool !== null);
 
-  const handleContinue = () => {
-    if (mode === 'signup') {
-      onSignUp({ email, selectedSchool });
-    } else {
-      onLogin({ email });
+  const handleContinue = async () => {
+    if (!isValid || loading) return;
+    setLoading(true);
+
+    try {
+      if (mode === 'signup') {
+        const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+        const user = userCredential.user;
+
+        // Create user document in Firestore
+        await setDoc(doc(db, 'users', user.uid), {
+          uid: user.uid,
+          email: user.email,
+          displayName: email.split('@')[0],
+          username: email.split('@')[0].toLowerCase(),
+          schoolId: selectedSchool.id,
+          schoolName: selectedSchool.name,
+          isVerifiedSchool: false,
+          followersCount: 0,
+          followingCount: 0,
+          likesReceived: 0,
+          createdAt: serverTimestamp()
+        });
+
+        onSignUp({ email, selectedSchool, user });
+      } else {
+        const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
+        onLogin({ user: userCredential.user });
+      }
+    } catch (err) {
+      console.error("Auth error:", err);
+      Alert.alert("Authentication Error", err.message || "Failed to authenticate.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -135,13 +168,17 @@ export default function AuthScreen({ onSignUp, onLogin }) {
         <View style={styles.footer}>
           <TouchableOpacity
             onPress={handleContinue}
-            style={[styles.ctaBtn, !isValid && styles.ctaBtnDisabled]}
+            style={[styles.ctaBtn, (!isValid || loading) && styles.ctaBtnDisabled]}
             activeOpacity={0.85}
-            disabled={!isValid}
+            disabled={!isValid || loading}
           >
-            <Text style={styles.ctaText}>
-              {mode === 'signup' ? 'Create account' : 'Log in'}
-            </Text>
+            {loading ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <Text style={styles.ctaText}>
+                {mode === 'signup' ? 'Create account' : 'Log in'}
+              </Text>
+            )}
           </TouchableOpacity>
 
           <Text style={styles.switchText}>

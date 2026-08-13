@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Feather } from '@expo/vector-icons';
 import { View } from 'react-native';
+
+import { auth, db } from './src/config/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
 // Onboarding screens
 import SplashScreen from './src/screens/SplashScreen';
@@ -134,14 +138,47 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser 
 }
 
 // ─── Root App — onboarding flow ──────────────────────────────────────────────
-// Flow:  splash → auth → interests (signup only) → main
 export default function App() {
   const [flow, setFlow] = useState('splash'); // 'splash' | 'auth' | 'interests' | 'main'
   const [currentSchool, setCurrentSchool] = useState(SCHOOLS[0]);
   const [currentUser, setCurrentUser] = useState(CURRENT_USER);
 
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            const data = userDoc.data();
+            setCurrentUser({
+              ...CURRENT_USER,
+              uid: user.uid,
+              email: user.email,
+              displayName: data.displayName || user.email.split('@')[0],
+              username: data.username || user.email.split('@')[0].toLowerCase(),
+              schoolId: data.schoolId || SCHOOLS[0].id,
+              schoolName: data.schoolName || SCHOOLS[0].name,
+              isVerifiedSchool: !!data.isVerifiedSchool,
+            });
+            const schoolObj = SCHOOLS.find(s => s.id === data.schoolId);
+            if (schoolObj) setCurrentSchool(schoolObj);
+          }
+        } catch (e) {
+          console.warn("Failed to fetch user doc on auth change:", e);
+        }
+      }
+    });
+    return unsub;
+  }, []);
+
   if (flow === 'splash') {
-    return <SplashScreen onDone={() => setFlow('auth')} />;
+    return <SplashScreen onDone={() => {
+      if (auth.currentUser) {
+        setFlow('main');
+      } else {
+        setFlow('auth');
+      }
+    }} />;
   }
 
   if (flow === 'auth') {
