@@ -7,6 +7,7 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS, RADIUS } from '../constants/theme';
 import { createPost } from '../services/feedService';
+import { uploadImage } from '../utils/uploadImage';
 
 export default function CreatePostModal({ visible, onClose, currentUser, currentSchool }) {
   const [content, setContent] = useState('');
@@ -40,6 +41,11 @@ export default function CreatePostModal({ visible, onClose, currentUser, current
 
     setSubmitting(true);
     try {
+      let uploadedMediaUrl = null;
+      if (selectedImage) {
+        uploadedMediaUrl = await uploadImage(selectedImage, 'posts');
+      }
+
       await createPost({
         authorId: currentUser.uid,
         authorName: currentUser.displayName || 'Student',
@@ -49,7 +55,7 @@ export default function CreatePostModal({ visible, onClose, currentUser, current
         authorSchoolName: currentSchool.name,
         isVerifiedAuthor: !!currentUser.isVerifiedSchool,
         content: content.trim(),
-        mediaUrls: selectedImage ? [selectedImage] : [],
+        mediaUrls: uploadedMediaUrl ? [uploadedMediaUrl] : [],
         scope
       });
 

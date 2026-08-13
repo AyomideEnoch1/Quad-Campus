@@ -7,6 +7,7 @@ import { Ionicons, Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { BRAND } from '../constants/theme';
 import { updateUserProfile } from '../services/userService';
+import { uploadImage } from '../utils/uploadImage';
 
 export default function SetupProfileScreen({ currentUser, onComplete }) {
   const [displayName, setDisplayName] = useState(currentUser?.displayName || '');
@@ -37,13 +38,18 @@ export default function SetupProfileScreen({ currentUser, onComplete }) {
   const handleSaveAndContinue = async () => {
     setSaving(true);
     try {
+      let finalAvatarUrl = avatarUrl;
+      if (avatarUrl && !avatarUrl.startsWith('http')) {
+        finalAvatarUrl = await uploadImage(avatarUrl, 'avatars');
+      }
+
       if (currentUser?.uid) {
         await updateUserProfile(currentUser.uid, {
           displayName: displayName.trim() || currentUser?.displayName,
           bio: bio.trim() || `Student @ ${currentUser?.schoolName || 'Campus'}`,
           major: major.trim() || 'General Studies',
           gradYear: parseInt(gradYear) || 2026,
-          avatarUrl: avatarUrl || currentUser?.avatarUrl
+          avatarUrl: finalAvatarUrl || currentUser?.avatarUrl
         });
       }
 
@@ -52,11 +58,10 @@ export default function SetupProfileScreen({ currentUser, onComplete }) {
         bio: bio.trim() || `Student @ ${currentUser?.schoolName || 'Campus'}`,
         major: major.trim() || 'General Studies',
         gradYear: parseInt(gradYear) || 2026,
-        avatarUrl: avatarUrl || currentUser?.avatarUrl
+        avatarUrl: finalAvatarUrl || currentUser?.avatarUrl
       });
     } catch (err) {
       console.error("Error setting up profile:", err);
-      // Even if update fails offline, continue to main app
       onComplete({});
     } finally {
       setSaving(false);

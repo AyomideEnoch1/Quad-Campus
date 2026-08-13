@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS, RADIUS } from '../constants/theme';
 import { createListing } from '../services/marketService';
+import { uploadImage } from '../utils/uploadImage';
 
 export default function CreateItemModal({ visible, onClose, currentUser, currentSchool }) {
   const [title, setTitle] = useState('');
@@ -47,6 +48,11 @@ export default function CreateItemModal({ visible, onClose, currentUser, current
 
     setSubmitting(true);
     try {
+      let imageUrl = 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&auto=format&fit=crop&q=80';
+      if (selectedImage) {
+        imageUrl = await uploadImage(selectedImage, 'marketplace');
+      }
+
       await createListing({
         sellerId: currentUser.uid,
         sellerName: currentUser.displayName || 'Student Seller',
@@ -59,7 +65,7 @@ export default function CreateItemModal({ visible, onClose, currentUser, current
         category,
         condition,
         description: description.trim(),
-        imageUrl: selectedImage || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&auto=format&fit=crop&q=80',
+        imageUrl,
         location: location.trim() || `${currentSchool.shortName} Campus`
       });
 

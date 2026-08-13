@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS, RADIUS } from '../constants/theme';
 import { updateUserProfile } from '../services/userService';
+import { uploadImage } from '../utils/uploadImage';
 
 export default function EditProfileModal({ visible, onClose, currentUser, onProfileUpdated }) {
   const [displayName, setDisplayName] = useState(currentUser?.displayName || '');
@@ -62,14 +63,25 @@ export default function EditProfileModal({ visible, onClose, currentUser, onProf
 
     setSubmitting(true);
     try {
+      let finalAvatarUrl = avatarUrl;
+      let finalBannerUrl = bannerUrl;
+
+      if (avatarUrl && !avatarUrl.startsWith('http')) {
+        finalAvatarUrl = await uploadImage(avatarUrl, 'avatars');
+      }
+
+      if (bannerUrl && !bannerUrl.startsWith('http')) {
+        finalBannerUrl = await uploadImage(bannerUrl, 'banners');
+      }
+
       const updateData = {
         displayName: displayName.trim(),
         username: username.trim().toLowerCase(),
         bio: bio.trim(),
         major: major.trim(),
         gradYear: parseInt(gradYear) || 2026,
-        avatarUrl,
-        bannerUrl
+        avatarUrl: finalAvatarUrl,
+        bannerUrl: finalBannerUrl
       };
 
       await updateUserProfile(currentUser.uid, updateData);
