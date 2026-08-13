@@ -4,11 +4,13 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeClubs, toggleJoinClub } from '../services/clubService';
 import ClubDetailModal from '../components/ClubDetailModal';
+import CreateClubModal from '../components/CreateClubModal';
 import EmptyState from '../components/EmptyState';
 
 export default function ClubsScreen({ clubs: initialClubs, currentUser, currentSchool }) {
   const [clubs, setClubs] = useState(initialClubs || []);
   const [selectedClub, setSelectedClub] = useState(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     const unsub = subscribeClubs(currentSchool?.id, currentUser?.uid, (liveClubs) => {
@@ -71,16 +73,34 @@ export default function ClubsScreen({ clubs: initialClubs, currentUser, currentS
 
   return (
     <View style={styles.container}>
+      {/* Top Action Header Bar */}
+      <View style={styles.topHeader}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.headerTitle}>Campus Organizations</Text>
+          <Text style={styles.headerSub}>Connect with student communities & groups</Text>
+        </View>
+        <TouchableOpacity 
+          onPress={() => setShowCreateModal(true)}
+          style={styles.createClubBtn}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="add" size={18} color="#fff" />
+          <Text style={styles.createClubText}>Create Club</Text>
+        </TouchableOpacity>
+      </View>
+
       <FlatList
         data={clubs}
         keyExtractor={item => item.id}
         renderItem={renderClub}
-        contentContainerStyle={{ padding: 12, gap: 12 }}
+        contentContainerStyle={{ padding: 12, gap: 12, paddingBottom: 24 }}
         ListEmptyComponent={
           <EmptyState
             icon="people-outline"
             title="No campus clubs yet"
             subtitle="Explore clubs from all universities or create the first student group!"
+            actionText="Create First Club"
+            onAction={() => setShowCreateModal(true)}
           />
         }
       />
@@ -92,6 +112,13 @@ export default function ClubsScreen({ clubs: initialClubs, currentUser, currentS
         currentUser={currentUser}
         onToggleJoin={(c) => toggleJoin(c)}
       />
+
+      <CreateClubModal
+        visible={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        currentUser={currentUser}
+        currentSchool={currentSchool}
+      />
     </View>
   );
 }
@@ -100,6 +127,40 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.bgMain,
+  },
+  topHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: COLORS.bgCard,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.borderColor,
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: COLORS.textMain,
+  },
+  headerSub: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+    marginTop: 2,
+  },
+  createClubBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: RADIUS.full,
+    gap: 4,
+  },
+  createClubText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '800',
   },
   card: {
     backgroundColor: COLORS.bgCard,
