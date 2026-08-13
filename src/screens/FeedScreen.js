@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert, Share, Modal } from 'react-native';
 import { Image } from 'expo-image';
+import { Video, ResizeMode } from 'expo-av';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeFeedPosts, toggleLikePost, deletePost, updatePostScope } from '../services/feedService';
@@ -264,9 +265,19 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
       {/* Body */}
       <Text style={styles.content}>{item.content}</Text>
 
-      {/* Media */}
+      {/* Media: Video or Image */}
       {item.mediaUrls && item.mediaUrls.length > 0 && (
-        <Image source={{ uri: item.mediaUrls[0] }} style={styles.mediaImage} />
+        item.mediaType === 'video' || (typeof item.mediaUrls[0] === 'string' && (item.mediaUrls[0].includes('.mp4') || item.mediaUrls[0].includes('.mov') || item.mediaUrls[0].includes('.webm'))) ? (
+          <Video
+            source={{ uri: item.mediaUrls[0] }}
+            style={styles.mediaImage}
+            useNativeControls
+            resizeMode={ResizeMode.COVER}
+            isLooping
+          />
+        ) : (
+          <Image source={{ uri: item.mediaUrls[0] }} style={styles.mediaImage} contentFit="cover" transition={200} />
+        )
       )}
 
       {/* Action Bar */}

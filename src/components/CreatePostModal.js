@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal, View, Text, TextInput, TouchableOpacity,
   StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { Image } from 'expo-image';
+import { Video, ResizeMode } from 'expo-av';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS, RADIUS } from '../constants/theme';
@@ -140,12 +141,15 @@ export default function CreatePostModal({ visible, onClose, currentUser, current
           {selectedMedia && (
             <View style={styles.imagePreviewContainer}>
               {selectedMedia.type === 'video' ? (
-                <View style={styles.videoBadgePreview}>
-                  <Ionicons name="videocam" size={28} color={COLORS.primary} />
-                  <Text style={styles.videoBadgeText}>Video Selected</Text>
-                </View>
+                <Video
+                  source={{ uri: selectedMedia.uri }}
+                  style={styles.imagePreview}
+                  useNativeControls
+                  resizeMode={ResizeMode.COVER}
+                  isLooping
+                />
               ) : (
-                <Image source={{ uri: selectedMedia.uri }} style={styles.imagePreview} />
+                <Image source={{ uri: selectedMedia.uri }} style={styles.imagePreview} contentFit="cover" />
               )}
 
               <TouchableOpacity 
