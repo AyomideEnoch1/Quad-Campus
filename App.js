@@ -39,6 +39,7 @@ import { COLORS } from './src/constants/theme';
 import NotificationsModal from './src/components/NotificationsModal';
 import GlobalSearchModal from './src/components/GlobalSearchModal';
 import { INITIAL_NOTIFICATIONS, subscribeUserNotifications } from './src/services/notificationService';
+import { getOrCreateChat } from './src/services/chatService';
 
 const Tab = createBottomTabNavigator();
 
