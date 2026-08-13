@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Alert, ActivityIndicator
+  Modal, View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Alert, ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
@@ -15,6 +15,7 @@ export default function AdsReviewScreen({ visible, onClose, currentUser }) {
 
   useEffect(() => {
     if (!visible) return;
+    setLoading(true);
     const q = query(
       collection(db, 'ads'),
       where('status', '==', 'pending')
@@ -25,7 +26,8 @@ export default function AdsReviewScreen({ visible, onClose, currentUser }) {
       setPendingAds(list);
       setLoading(false);
     }, (err) => {
-      console.warn("Ads review queue error:", err);
+      console.warn("Ads review queue notice:", err?.message || err);
+      setPendingAds([]);
       setLoading(false);
     });
 
@@ -132,39 +134,41 @@ export default function AdsReviewScreen({ visible, onClose, currentUser }) {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color={COLORS.textMain} />
-        </TouchableOpacity>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Text style={styles.topTitle}>Ads Review Queue</Text>
-          <RoleBadge role="ads_reviewer" size={16} />
+    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
+      <SafeAreaView style={styles.container}>
+        {/* Header */}
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={onClose} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={22} color={COLORS.textMain} />
+          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={styles.topTitle}>Ads Review Queue</Text>
+            <RoleBadge role="ads_reviewer" size={16} />
+          </View>
+          <View style={{ width: 36 }} />
         </View>
-        <View style={{ width: 36 }} />
-      </View>
 
-      {loading ? (
-        <View style={styles.centerLoading}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-        </View>
-      ) : (
-        <FlatList
-          data={pendingAds}
-          keyExtractor={item => item.id}
-          renderItem={renderAdCard}
-          contentContainerStyle={{ padding: 14, gap: 14, paddingBottom: 40 }}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="checkmark-done-circle-outline" size={48} color={COLORS.badgeGreen} />
-              <Text style={styles.emptyTitle}>Queue Cleared!</Text>
-              <Text style={styles.emptySub}>No pending ad campaigns awaiting review right now.</Text>
-            </View>
-          }
-        />
-      )}
-    </SafeAreaView>
+        {loading ? (
+          <View style={styles.centerLoading}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+          </View>
+        ) : (
+          <FlatList
+            data={pendingAds}
+            keyExtractor={item => item.id}
+            renderItem={renderAdCard}
+            contentContainerStyle={{ padding: 14, gap: 14, paddingBottom: 40 }}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Ionicons name="checkmark-done-circle-outline" size={48} color={COLORS.badgeGreen} />
+                <Text style={styles.emptyTitle}>Queue Cleared!</Text>
+                <Text style={styles.emptySub}>No pending ad campaigns awaiting review right now.</Text>
+              </View>
+            }
+          />
+        )}
+      </SafeAreaView>
+    </Modal>
   );
 }
 
