@@ -27,7 +27,6 @@ export function subscribeFeedPosts(schoolId, callback) {
     q = query(
       collection(db, 'posts'),
       where('authorSchoolId', '==', schoolId),
-      orderBy('createdAt', 'desc'),
       limit(50)
     );
   } else {
@@ -42,14 +41,15 @@ export function subscribeFeedPosts(schoolId, callback) {
     const posts = snapshot.docs.map(d => ({
       id: d.id,
       ...d.data(),
-      // Handle serverTimestamp formatting fallback
       createdAt: d.data().createdAt?.toDate
         ? formatTimeAgo(d.data().createdAt.toDate())
-        : 'Just now'
-    }));
+        : 'Just now',
+      _rawDate: d.data().createdAt?.toDate ? d.data().createdAt.toDate() : new Date()
+    })).sort((a, b) => b._rawDate - a._rawDate);
+
     callback(posts);
   }, (err) => {
-    console.error("Feed subscription error:", err);
+    console.warn("Feed subscription error:", err?.message || err);
   });
 }
 
