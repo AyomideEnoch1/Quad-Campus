@@ -13,23 +13,26 @@ service cloud.firestore {
     
     // Users Collection
     match /users/{userId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow create, update, delete: if isSignedIn() && isOwner(userId);
     }
 
     // Posts Collection
     match /posts/{postId} {
-      allow read, create, update, delete: if isSignedIn();
+      allow read: if true;
+      allow create, update, delete: if isSignedIn();
 
       // Post Comments
       match /comments/{commentId} {
-        allow read, create, update, delete: if isSignedIn();
+        allow read: if true;
+        allow create, update, delete: if isSignedIn();
       }
     }
 
     // Marketplace Collection
     match /marketplace_items/{itemId} {
-      allow read, create, update, delete: if isSignedIn();
+      allow read: if true;
+      allow create, update, delete: if isSignedIn();
     }
 
     // Chats & Messages
@@ -43,10 +46,12 @@ service cloud.firestore {
 
     // Clubs Collection
     match /clubs/{clubId} {
-      allow read, create, update, delete: if isSignedIn();
+      allow read: if true;
+      allow create, update, delete: if isSignedIn();
 
       match /members/{memberId} {
-        allow read, write, delete: if isSignedIn();
+        allow read: if true;
+        allow write, delete: if isSignedIn();
       }
 
       match /messages/{messageId} {
@@ -56,12 +61,13 @@ service cloud.firestore {
 
     // Ads System Collection
     match /ads/{adId} {
-      allow read, create, update, delete: if isSignedIn();
+      allow read: if true;
+      allow create, update, delete: if isSignedIn();
     }
 
     // Ad Impressions & Clicks Tracking
     match /ad_impressions/{impressionId} {
-      allow read, create: if isSignedIn();
+      allow read, create: if true;
     }
 
     // Audit Logging Collection

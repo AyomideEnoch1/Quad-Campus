@@ -66,7 +66,9 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
     const unsubAds = onSnapshot(qAds, (snap) => {
       const liveAds = snap.docs.map(d => ({ id: d.id, ...d.data(), isSponsored: true }));
       setActiveAds(liveAds);
-    }, (err) => console.warn("Ads feed notice:", err));
+    }, (err) => {
+      setActiveAds([]);
+    });
 
     return () => {
       unsubFeed();
