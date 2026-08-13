@@ -51,29 +51,31 @@ export async function getOrCreateChat(user1, user2) {
 export function subscribeUserChats(userUid, callback) {
   const q = query(
     collection(db, 'chats'),
-    where('participants', 'array-contains', userUid),
-    orderBy('lastMessageTime', 'desc')
+    where('participants', 'array-contains', userUid)
   );
 
   return onSnapshot(q, (snapshot) => {
-    const chats = snapshot.docs.map(d => {
-      const data = d.data();
-      const partnerUid = data.participants.find(uid => uid !== userUid);
-      const partner = data.participantDetails?.[partnerUid] || { displayName: 'Student', avatarUrl: '' };
+    const chats = snapshot.docs
+      .map(d => {
+        const data = d.data();
+        const partnerUid = data.participants?.find(uid => uid !== userUid) || 'unknown';
+        const partner = data.participantDetails?.[partnerUid] || { displayName: 'Student', avatarUrl: '' };
 
-      return {
-        id: d.id,
-        partner,
-        lastMessage: data.lastMessage || 'No messages yet',
-        lastMessageTime: data.lastMessageTime?.toDate
-          ? formatTimeAgo(data.lastMessageTime.toDate())
-          : 'Recently',
-        unread: data.unreadCount?.[userUid] || 0
-      };
-    });
+        return {
+          id: d.id,
+          partner,
+          lastMessage: data.lastMessage || 'No messages yet',
+          lastMessageTime: data.lastMessageTime?.toDate
+            ? formatTimeAgo(data.lastMessageTime.toDate())
+            : 'Recently',
+          _rawDate: data.lastMessageTime?.toDate ? data.lastMessageTime.toDate() : new Date()
+        };
+      })
+      .sort((a, b) => b._rawDate - a._rawDate);
+
     callback(chats);
   }, (err) => {
-    console.error("Chat list subscription error:", err);
+    console.warn("Chat list subscription notice:", err?.message || err);
   });
 }
 
