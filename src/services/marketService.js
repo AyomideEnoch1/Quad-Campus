@@ -101,6 +101,17 @@ export async function markItemSold(itemId) {
 }
 
 /**
+ * Update existing listing details
+ */
+export async function updateListing(itemId, updateData) {
+  const itemRef = doc(db, 'marketplace_items', itemId);
+  await updateDoc(itemRef, {
+    ...updateData,
+    updatedAt: serverTimestamp()
+  });
+}
+
+/**
  * Delete listing
  */
 export async function deleteListing(itemId) {

@@ -91,8 +91,13 @@ export async function searchUsers(searchTerm) {
  */
 export async function deleteUserAccount(uid) {
   if (!uid) return;
-  // 1. Delete Firestore profile document
-  await deleteDoc(doc(db, 'users', uid));
+
+  try {
+    // 1. Delete Firestore profile document
+    await deleteDoc(doc(db, 'users', uid));
+  } catch (err) {
+    console.warn("Firestore user doc delete notice:", err?.message || err);
+  }
 
   // 2. Delete Firebase Auth user
   if (auth.currentUser) {

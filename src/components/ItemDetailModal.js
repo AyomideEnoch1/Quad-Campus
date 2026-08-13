@@ -1,16 +1,64 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Modal, View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, Platform
+  Modal, View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, TextInput, ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
-import { markItemSold, deleteListing } from '../services/marketService';
+import { markItemSold, deleteListing, updateListing } from '../services/marketService';
 
 export default function ItemDetailModal({ visible, onClose, item, currentUser, onStartChat }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [title, setTitle] = useState('');
+  const [price, setPrice] = useState('');
+  const [description, setDescription] = useState('');
+  const [location, setLocation] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (item) {
+      setTitle(item.title || '');
+      setPrice(item.price ? String(item.price) : '');
+      setDescription(item.description || '');
+      setLocation(item.location || '');
+      setIsEditing(false);
+    }
+  }, [item]);
+
   if (!item) return null;
 
   const isSeller = item.sellerId === currentUser?.uid;
+
+  const handleSaveEdits = async () => {
+    if (!title.trim() || !price.trim()) {
+      Alert.alert("Missing Info", "Title and price are required.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const updateData = {
+        title: title.trim(),
+        price: parseFloat(price) || 0,
+        description: description.trim(),
+        location: location.trim()
+      };
+
+      await updateListing(item.id, updateData);
+      item.title = updateData.title;
+      item.price = updateData.price;
+      item.description = updateData.description;
+      item.location = updateData.location;
+
+      setIsEditing(false);
+      Alert.alert("Listing Updated!", "Your product details have been saved.");
+    } catch (err) {
+      console.error("Error updating listing:", err);
+      Alert.alert("Error", "Failed to save listing edits.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleMarkSold = async () => {
     try {
@@ -52,11 +100,19 @@ export default function ItemDetailModal({ visible, onClose, item, currentUser, o
           <TouchableOpacity onPress={onClose} style={styles.backBtn} activeOpacity={0.7}>
             <Ionicons name="arrow-back" size={24} color={COLORS.textMain} />
           </TouchableOpacity>
-          <Text style={styles.topTitle} numberOfLines={1}>{item.title}</Text>
-          <View style={{ width: 36 }} />
+          <Text style={styles.topTitle} numberOfLines={1}>
+            {isEditing ? 'Edit Product Details' : item.title}
+          </Text>
+          {isSeller && !isEditing ? (
+            <TouchableOpacity onPress={() => setIsEditing(true)} style={styles.editHeaderBtn}>
+              <Feather name="edit-3" size={18} color={COLORS.primary} />
+            </TouchableOpacity>
+          ) : (
+            <View style={{ width: 36 }} />
+          )}
         </View>
 
-        {/* Scrollable Content (Includes Hero Image, Details, and Action Button) */}
+        {/* Scrollable Content */}
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Large Hero Image */}
           <View style={styles.heroImageContainer}>
@@ -69,70 +125,144 @@ export default function ItemDetailModal({ visible, onClose, item, currentUser, o
             </View>
           </View>
 
-          {/* Title & Price Header */}
-          <View style={styles.headerSection}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.title}>{item.title}</Text>
-              <Text style={styles.category}>{item.category}</Text>
-            </View>
-            <Text style={styles.price}>₦{typeof item.price === 'number' ? item.price.toLocaleString() : item.price}</Text>
-          </View>
+          {isEditing ? (
+            /* Editing Form Mode */
+            <View style={styles.formCard}>
+              <Text style={styles.formTitle}>Edit Listing Information</Text>
 
-          {/* Seller Card */}
-          <View style={styles.sellerCard}>
-            <Image 
-              source={{ uri: item.sellerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' }} 
-              style={styles.sellerAvatar} 
-            />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.sellerName}>{item.sellerName}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                <Ionicons name="school-outline" size={12} color={COLORS.primary} />
-                <Text style={styles.sellerSchool}>{item.sellerSchoolName || 'Campus Seller'}</Text>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Product Title</Text>
+                <TextInput 
+                  style={styles.input} 
+                  value={title} 
+                  onChangeText={setTitle} 
+                  placeholder="Item Title"
+                />
               </View>
-            </View>
-            {item.location && (
-              <View style={styles.locationTag}>
-                <Ionicons name="location-outline" size={14} color={COLORS.primary} />
-                <Text style={styles.locationText}>{item.location}</Text>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Price (₦)</Text>
+                <TextInput 
+                  style={styles.input} 
+                  value={price} 
+                  onChangeText={setPrice} 
+                  keyboardType="numeric"
+                  placeholder="Price"
+                />
               </View>
-            )}
-          </View>
 
-          {/* Item Description */}
-          <View style={styles.descriptionSection}>
-            <Text style={styles.sectionTitle}>Item Overview</Text>
-            <Text style={styles.descriptionText}>
-              {item.description || "No detailed description provided by seller for this item."}
-            </Text>
-          </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Pickup Location</Text>
+                <TextInput 
+                  style={styles.input} 
+                  value={location} 
+                  onChangeText={setLocation} 
+                  placeholder="Campus Location"
+                />
+              </View>
 
-          {/* Action Buttons (Inside ScrollView so never cut off) */}
-          <View style={styles.actionContainer}>
-            {isSeller ? (
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                <TouchableOpacity onPress={handleMarkSold} style={[styles.ctaBtn, { backgroundColor: COLORS.badgeGreen, flex: 1 }]}>
-                  <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
-                  <Text style={styles.ctaText}>Mark as Sold</Text>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Item Overview / Description</Text>
+                <TextInput 
+                  style={[styles.input, styles.textArea]} 
+                  value={description} 
+                  onChangeText={setDescription} 
+                  multiline
+                  numberOfLines={4}
+                  placeholder="Description..."
+                />
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+                <TouchableOpacity onPress={() => setIsEditing(false)} style={[styles.ctaBtn, { backgroundColor: COLORS.bgInput, flex: 1 }]}>
+                  <Text style={[styles.ctaText, { color: COLORS.textMain }]}>Cancel</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={handleDelete} style={[styles.ctaBtn, { backgroundColor: '#EF4444', width: 52 }]}>
-                  <Ionicons name="trash-outline" size={20} color="#fff" />
+                <TouchableOpacity onPress={handleSaveEdits} disabled={saving} style={[styles.ctaBtn, { flex: 2 }]}>
+                  {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.ctaText}>Save Edits</Text>}
                 </TouchableOpacity>
               </View>
-            ) : (
-              <TouchableOpacity 
-                onPress={() => {
-                  onClose();
-                  if (onStartChat) onStartChat(item.sellerName, item);
-                }} 
-                style={styles.ctaBtn}
-                activeOpacity={0.85}
-              >
-                <Feather name="message-square" size={20} color="#fff" />
-                <Text style={styles.ctaText}>Message Seller</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+            </View>
+          ) : (
+            /* Normal Viewing Mode */
+            <>
+              {/* Title & Price Header */}
+              <View style={styles.headerSection}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.title}>{item.title}</Text>
+                  <Text style={styles.category}>{item.category}</Text>
+                </View>
+                <Text style={styles.price}>₦{typeof item.price === 'number' ? item.price.toLocaleString() : item.price}</Text>
+              </View>
+
+              {/* Seller Card */}
+              <View style={styles.sellerCard}>
+                <Image 
+                  source={{ uri: item.sellerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' }} 
+                  style={styles.sellerAvatar} 
+                />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sellerName}>{item.sellerName}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                    <Ionicons name="school-outline" size={12} color={COLORS.primary} />
+                    <Text style={styles.sellerSchool}>{item.sellerSchoolName || 'Campus Seller'}</Text>
+                  </View>
+                </View>
+                {item.location && (
+                  <View style={styles.locationTag}>
+                    <Ionicons name="location-outline" size={14} color={COLORS.primary} />
+                    <Text style={styles.locationText}>{item.location}</Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Item Description / Overview */}
+              <View style={styles.descriptionSection}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={styles.sectionTitle}>Item Overview</Text>
+                  {isSeller && (
+                    <TouchableOpacity onPress={() => setIsEditing(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <Feather name="edit-2" size={14} color={COLORS.primary} />
+                      <Text style={{ fontSize: 12, color: COLORS.primary, fontWeight: '700' }}>Edit</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+                <Text style={styles.descriptionText}>
+                  {item.description || "No detailed description provided by seller for this item."}
+                </Text>
+              </View>
+
+              {/* Action Buttons */}
+              <View style={styles.actionContainer}>
+                {isSeller ? (
+                  <View style={{ flexDirection: 'row', gap: 10 }}>
+                    <TouchableOpacity onPress={() => setIsEditing(true)} style={[styles.ctaBtn, { backgroundColor: COLORS.primary, flex: 1 }]}>
+                      <Feather name="edit" size={18} color="#fff" />
+                      <Text style={styles.ctaText}>Edit Item</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={handleMarkSold} style={[styles.ctaBtn, { backgroundColor: COLORS.badgeGreen, flex: 1 }]}>
+                      <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+                      <Text style={styles.ctaText}>Mark Sold</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={handleDelete} style={[styles.ctaBtn, { backgroundColor: '#EF4444', width: 50 }]}>
+                      <Ionicons name="trash-outline" size={20} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <TouchableOpacity 
+                    onPress={() => {
+                      onClose();
+                      if (onStartChat) onStartChat(item.sellerName, item);
+                    }} 
+                    style={styles.ctaBtn}
+                    activeOpacity={0.85}
+                  >
+                    <Feather name="message-square" size={20} color="#fff" />
+                    <Text style={styles.ctaText}>Message Seller</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </>
+          )}
         </ScrollView>
       </SafeAreaView>
     </Modal>
@@ -159,6 +289,14 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     backgroundColor: COLORS.bgInput,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editHeaderBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -284,6 +422,40 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 22,
     color: COLORS.textMuted,
+  },
+  formCard: {
+    backgroundColor: COLORS.bgCard,
+    padding: 16,
+    borderRadius: RADIUS.xl,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: COLORS.borderColor,
+  },
+  formTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: COLORS.textMain,
+    marginBottom: 4,
+  },
+  inputGroup: {
+    gap: 4,
+  },
+  label: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.textMuted,
+  },
+  input: {
+    backgroundColor: COLORS.bgInput,
+    borderRadius: RADIUS.lg,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: COLORS.textMain,
+  },
+  textArea: {
+    height: 90,
+    textAlignVertical: 'top',
   },
   actionContainer: {
     marginTop: 8,
