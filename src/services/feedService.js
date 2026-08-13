@@ -38,14 +38,17 @@ export function subscribeFeedPosts(schoolId, callback) {
   }
 
   return onSnapshot(q, (snapshot) => {
-    const posts = snapshot.docs.map(d => ({
-      id: d.id,
-      ...d.data(),
-      createdAt: d.data().createdAt?.toDate
-        ? formatTimeAgo(d.data().createdAt.toDate())
-        : 'Just now',
-      _rawDate: d.data().createdAt?.toDate ? d.data().createdAt.toDate() : new Date()
-    })).sort((a, b) => b._rawDate - a._rawDate);
+    const posts = snapshot.docs
+      .map(d => ({
+        id: d.id,
+        ...d.data(),
+        createdAt: d.data().createdAt?.toDate
+          ? formatTimeAgo(d.data().createdAt.toDate())
+          : 'Just now',
+        _rawDate: d.data().createdAt?.toDate ? d.data().createdAt.toDate() : new Date()
+      }))
+      .filter(p => (!schoolId ? p.scope === 'all_schools' : true))
+      .sort((a, b) => b._rawDate - a._rawDate);
 
     callback(posts);
   }, (err) => {
