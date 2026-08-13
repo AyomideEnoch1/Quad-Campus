@@ -4,20 +4,25 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeMarketplaceItems } from '../services/marketService';
 import CreateItemModal from '../components/CreateItemModal';
+import { MarketCardSkeleton } from '../components/SkeletonLoader';
+import EmptyState from '../components/EmptyState';
 
 export default function MarketScreen({ items: initialItems, currentUser, currentSchool, onStartChatWithSeller }) {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [items, setItems] = useState(initialItems || []);
+  const [loading, setLoading] = useState(true);
   const [showItemModal, setShowItemModal] = useState(false);
 
   const categories = ['All', 'Textbooks', 'Tech', 'Dorm Gear', 'Tickets'];
 
   useEffect(() => {
+    setLoading(true);
     const unsub = subscribeMarketplaceItems(selectedCategory, (liveItems) => {
-      if (liveItems && liveItems.length > 0) {
+      if (liveItems) {
         setItems(liveItems);
       }
+      setLoading(false);
     });
     return unsub;
   }, [selectedCategory]);
@@ -84,14 +89,30 @@ export default function MarketScreen({ items: initialItems, currentUser, current
       </View>
 
       {/* 2-Column Listing Grid */}
-      <FlatList
-        data={filteredItems}
-        keyExtractor={item => item.id}
-        numColumns={2}
-        renderItem={renderItemCard}
-        columnWrapperStyle={{ justifyContent: 'space-between' }}
-        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 80, gap: 12 }}
-      />
+      {loading ? (
+        <View style={{ flexDirection: 'row', paddingHorizontal: 12, gap: 12 }}>
+          <MarketCardSkeleton />
+          <MarketCardSkeleton />
+        </View>
+      ) : (
+        <FlatList
+          data={filteredItems}
+          keyExtractor={item => item.id}
+          numColumns={2}
+          renderItem={renderItemCard}
+          columnWrapperStyle={{ justifyContent: 'space-between' }}
+          contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 80, gap: 12 }}
+          ListEmptyComponent={
+            <EmptyState
+              icon="cart-outline"
+              title="No listings found"
+              subtitle="Be the first to sell a textbook, tech item, or dorm gear on campus!"
+              actionText="List an Item"
+              onAction={() => setShowItemModal(true)}
+            />
+          }
+        />
+      )}
 
       {/* Floating Sell Item Button */}
       <TouchableOpacity 

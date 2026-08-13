@@ -4,22 +4,27 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeFeedPosts, toggleLikePost } from '../services/feedService';
 import CreatePostModal from '../components/CreatePostModal';
+import { FeedCardSkeleton } from '../components/SkeletonLoader';
+import EmptyState from '../components/EmptyState';
 
 export default function FeedScreen({ posts: initialPosts, currentSchool, currentUser, onOpenPostModal }) {
   const [feedScope, setFeedScope] = useState('my_school'); // 'my_school' | 'all_schools'
   const [posts, setPosts] = useState(initialPosts || []);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
 
   useEffect(() => {
+    setLoading(true);
     const schoolIdFilter = feedScope === 'my_school' ? currentSchool.id : null;
     const unsub = subscribeFeedPosts(schoolIdFilter, (livePosts) => {
-      if (livePosts && livePosts.length > 0) {
+      if (livePosts) {
         setPosts(livePosts.map(p => ({
           ...p,
           isLiked: p.likedBy?.includes(currentUser?.uid)
         })));
       }
+      setLoading(false);
     });
     return unsub;
   }, [feedScope, currentSchool.id, currentUser?.uid]);
@@ -128,20 +133,37 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
       </View>
 
       {/* Feed List */}
-      <FlatList
-        data={posts}
-        keyExtractor={item => item.id}
-        renderItem={renderPost}
-        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 24, gap: 12 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />}
-        ListHeaderComponent={
-          <TouchableOpacity onPress={() => setShowPostModal(true)} style={styles.composeCard}>
-            <Image source={{ uri: currentUser.avatarUrl }} style={{ width: 36, height: 36, borderRadius: 18 }} />
-            <Text style={styles.composePlaceholder}>What's happening on campus?</Text>
-            <Ionicons name="image-outline" size={20} color={COLORS.primary} />
-          </TouchableOpacity>
-        }
-      />
+      {loading ? (
+        <View style={{ paddingHorizontal: 12, paddingTop: 12 }}>
+          <FeedCardSkeleton />
+          <FeedCardSkeleton />
+          <FeedCardSkeleton />
+        </View>
+      ) : (
+        <FlatList
+          data={posts}
+          keyExtractor={item => item.id}
+          renderItem={renderPost}
+          contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 24, gap: 12 }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />}
+          ListHeaderComponent={
+            <TouchableOpacity onPress={() => setShowPostModal(true)} style={styles.composeCard}>
+              <Image source={{ uri: currentUser.avatarUrl }} style={{ width: 36, height: 36, borderRadius: 18 }} />
+              <Text style={styles.composePlaceholder}>What's happening on campus?</Text>
+              <Ionicons name="image-outline" size={20} color={COLORS.primary} />
+            </TouchableOpacity>
+          }
+          ListEmptyComponent={
+            <EmptyState
+              icon="chatbubbles-outline"
+              title="No posts yet"
+              subtitle={`Be the first to share what's happening at ${currentSchool.shortName}!`}
+              actionText="Create First Post"
+              onAction={() => setShowPostModal(true)}
+            />
+          }
+        />
+      )}
 
       <CreatePostModal
         visible={showPostModal}

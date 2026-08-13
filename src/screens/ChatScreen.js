@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeUserChats } from '../services/chatService';
+import EmptyState from '../components/EmptyState';
 
 export default function ChatScreen({ chats: initialChats, currentUser }) {
   const [chats, setChats] = useState(initialChats || []);
@@ -10,7 +11,7 @@ export default function ChatScreen({ chats: initialChats, currentUser }) {
   useEffect(() => {
     if (!currentUser?.uid) return;
     const unsub = subscribeUserChats(currentUser.uid, (liveChats) => {
-      if (liveChats && liveChats.length > 0) {
+      if (liveChats) {
         setChats(liveChats);
       }
     });
@@ -49,6 +50,13 @@ export default function ChatScreen({ chats: initialChats, currentUser }) {
         keyExtractor={item => item.id}
         renderItem={renderChatItem}
         contentContainerStyle={{ padding: 12, gap: 8 }}
+        ListEmptyComponent={
+          <EmptyState
+            icon="chatbubble-ellipses-outline"
+            title="No conversations yet"
+            subtitle="Message sellers in the marketplace or chat with campus club members to start talking!"
+          />
+        }
       />
     </View>
   );
