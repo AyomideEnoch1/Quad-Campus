@@ -1,18 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Modal, View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Image, SafeAreaView
+  Modal, View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Image, SafeAreaView, ActivityIndicator
 } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import RoleBadge from './RoleBadge';
-
-const MOCK_USERS = [
-  { id: 'usr_1', displayName: 'Ayomide Enoch', username: 'ayomidenoch', role: 'super_admin', schoolName: 'UNILAG', avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' },
-  { id: 'usr_2', displayName: 'Jenny Wilson', username: 'jenny_wilson', role: 'student', schoolName: 'Harvard', avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&auto=format&fit=crop&q=80' },
-  { id: 'usr_3', displayName: 'Alex Rivera', username: 'arivera_mit', role: 'club_admin', schoolName: 'MIT', avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&auto=format&fit=crop&q=80' },
-  { id: 'usr_4', displayName: 'Tobi Adebayo', username: 'tobi_unilag', role: 'school_admin', schoolName: 'UNILAG', avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80' },
-  { id: 'usr_5', displayName: 'Chika Nwosu', username: 'chika_ui', role: 'advertiser', schoolName: 'UI', avatarUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&auto=format&fit=crop&q=80' }
-];
+import { collection, query, getDocs, limit } from 'firebase/firestore';
+import { db } from '../config/firebase';
 
 export default function GlobalSearchModal({ 
   visible, 
@@ -25,10 +19,29 @@ export default function GlobalSearchModal({
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'users' | 'posts' | 'market' | 'clubs'
+  const [usersList, setUsersList] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  useEffect(() => {
+    if (!visible) return;
+    const fetchUsers = async () => {
+      try {
+        setLoadingUsers(true);
+        const snap = await getDocs(query(collection(db, 'users'), limit(50)));
+        const users = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setUsersList(users);
+      } catch (err) {
+        console.warn("GlobalSearch user fetch notice:", err?.message || err);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+    fetchUsers();
+  }, [visible]);
 
   const queryClean = searchQuery.trim().toLowerCase();
 
-  const filteredUsers = !queryClean ? [] : MOCK_USERS.filter(u =>
+  const filteredUsers = !queryClean ? usersList.slice(0, 5) : usersList.filter(u =>
     u.displayName?.toLowerCase().includes(queryClean) ||
     u.username?.toLowerCase().includes(queryClean) ||
     u.schoolName?.toLowerCase().includes(queryClean)

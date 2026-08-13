@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Modal, View, Text, StyleSheet, Image, TouchableOpacity, ScrollView,
   TextInput, FlatList, ActivityIndicator, KeyboardAvoidingView, Platform
@@ -15,6 +15,7 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState('');
   const [sending, setSending] = useState(false);
+  const flatListRef = useRef(null);
 
   useEffect(() => {
     if (!club?.id || !visible || activeTab !== 'chat') return;
@@ -152,10 +153,12 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
 
             {/* Message List */}
             <FlatList
+              ref={flatListRef}
               data={messages}
               keyExtractor={item => item.id}
               renderItem={renderMessage}
               contentContainerStyle={{ padding: 14, gap: 10, paddingBottom: 20 }}
+              onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
               ListEmptyComponent={
                 <View style={styles.emptyChat}>
                   <Ionicons name="chatbubbles-outline" size={44} color={COLORS.primary} />
