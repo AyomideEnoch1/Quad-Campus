@@ -5,6 +5,7 @@ import {
   Modal, FlatList, ActivityIndicator, Alert
 } from 'react-native';
 import Svg, { Circle, Line as SvgLine } from 'react-native-svg';
+import { Ionicons } from '@expo/vector-icons';
 import { BRAND } from '../constants/theme';
 import { SCHOOLS } from '../data/mockData';
 import { auth, db } from '../config/firebase';
