@@ -3,13 +3,16 @@ import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeClubs, toggleJoinClub } from '../services/clubService';
+import ClubDetailModal from '../components/ClubDetailModal';
+import EmptyState from '../components/EmptyState';
 
 export default function ClubsScreen({ clubs: initialClubs, currentUser, currentSchool }) {
   const [clubs, setClubs] = useState(initialClubs || []);
+  const [selectedClub, setSelectedClub] = useState(null);
 
   useEffect(() => {
     const unsub = subscribeClubs(currentSchool?.id, currentUser?.uid, (liveClubs) => {
-      if (liveClubs && liveClubs.length > 0) {
+      if (liveClubs) {
         setClubs(liveClubs);
       }
     });
@@ -26,6 +29,10 @@ export default function ClubsScreen({ clubs: initialClubs, currentUser, currentS
       return c;
     }));
 
+    if (selectedClub && selectedClub.id === club.id) {
+      setSelectedClub(prev => prev ? ({ ...prev, isJoined: !prev.isJoined, memberCount: !prev.isJoined ? prev.memberCount + 1 : prev.memberCount - 1 }) : null);
+    }
+
     try {
       if (currentUser?.uid) {
         await toggleJoinClub(club.id, currentUser.uid, club.isJoined);
@@ -36,7 +43,11 @@ export default function ClubsScreen({ clubs: initialClubs, currentUser, currentS
   };
 
   const renderClub = ({ item }) => (
-    <View style={styles.card}>
+    <TouchableOpacity 
+      style={styles.card}
+      activeOpacity={0.85}
+      onPress={() => setSelectedClub(item)}
+    >
       <Image source={{ uri: item.bannerUrl }} style={styles.banner} />
       <View style={styles.infoRow}>
         <Image source={{ uri: item.logoUrl }} style={styles.logo} />
@@ -55,7 +66,7 @@ export default function ClubsScreen({ clubs: initialClubs, currentUser, currentS
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -65,6 +76,21 @@ export default function ClubsScreen({ clubs: initialClubs, currentUser, currentS
         keyExtractor={item => item.id}
         renderItem={renderClub}
         contentContainerStyle={{ padding: 12, gap: 12 }}
+        ListEmptyComponent={
+          <EmptyState
+            icon="people-outline"
+            title="No campus clubs yet"
+            subtitle="Explore clubs from all universities or create the first student group!"
+          />
+        }
+      />
+
+      <ClubDetailModal
+        visible={!!selectedClub}
+        club={selectedClub}
+        onClose={() => setSelectedClub(null)}
+        currentUser={currentUser}
+        onToggleJoin={(c) => toggleJoin(c)}
       />
     </View>
   );

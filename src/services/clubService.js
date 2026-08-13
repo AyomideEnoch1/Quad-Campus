@@ -9,6 +9,7 @@ import {
   query,
   where,
   orderBy,
+  limit,
   onSnapshot,
   getDoc,
   serverTimestamp,
@@ -21,7 +22,7 @@ import {
 export function subscribeClubs(schoolId, userUid, callback) {
   const q = query(
     collection(db, 'clubs'),
-    orderBy('memberCount', 'desc')
+    limit(50)
   );
 
   return onSnapshot(q, async (snapshot) => {
@@ -44,7 +45,7 @@ export function subscribeClubs(schoolId, userUid, callback) {
 
     callback(clubs);
   }, (err) => {
-    console.error("Clubs subscription error:", err);
+    console.warn("Clubs subscription notice:", err?.message || err);
   });
 }
 
@@ -109,4 +110,45 @@ export async function createClub({
   });
 
   return docRef.id;
+}
+
+/**
+ * Subscribe to club group chat messages in real-time
+ */
+export function subscribeClubMessages(clubId, callback) {
+  if (!clubId) return;
+
+  const messagesRef = collection(db, 'clubs', clubId, 'messages');
+  const q = query(messagesRef, limit(100));
+
+  return onSnapshot(q, (snapshot) => {
+    const messages = snapshot.docs.map(d => ({
+      id: d.id,
+      ...d.data(),
+      time: d.data().createdAt?.toDate
+        ? d.data().createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : 'Just now',
+      _rawDate: d.data().createdAt?.toDate ? d.data().createdAt.toDate() : new Date()
+    })).sort((a, b) => a._rawDate - b._rawDate);
+
+    callback(messages);
+  }, (err) => {
+    console.warn("Club messages notice:", err?.message || err);
+  });
+}
+
+/**
+ * Send a message to a club group chat
+ */
+export async function sendClubMessage(clubId, { senderId, senderName, senderAvatar, text }) {
+  if (!clubId || !text.trim()) return;
+
+  const messagesRef = collection(db, 'clubs', clubId, 'messages');
+  await addDoc(messagesRef, {
+    senderId,
+    senderName,
+    senderAvatar,
+    text: text.trim(),
+    createdAt: serverTimestamp()
+  });
 }
