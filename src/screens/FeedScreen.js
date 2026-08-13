@@ -289,23 +289,35 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
 
   return (
     <View style={styles.container}>
-      {/* Scope Switcher Pill Bar */}
-      <View style={styles.pillContainer}>
+      {/* Segmented Control Bar */}
+      <View style={styles.segmentedContainer}>
         <TouchableOpacity 
           onPress={() => setFeedScope('my_school')}
-          style={[styles.pillBtn, feedScope === 'my_school' && styles.pillActive]}
+          style={[styles.segmentedTab, feedScope === 'my_school' && styles.segmentedTabActive]}
+          activeOpacity={0.8}
         >
-          <Text style={[styles.pillText, feedScope === 'my_school' && styles.pillTextActive]}>
-            🏫 {currentSchool?.shortName || 'My School'}
+          <Ionicons 
+            name="school-outline" 
+            size={16} 
+            color={feedScope === 'my_school' ? COLORS.primary : COLORS.textMuted} 
+          />
+          <Text style={[styles.segmentedText, feedScope === 'my_school' && styles.segmentedTextActive]}>
+            {currentSchool?.shortName || 'My School'}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
           onPress={() => setFeedScope('all_schools')}
-          style={[styles.pillBtn, feedScope === 'all_schools' && styles.pillActive]}
+          style={[styles.segmentedTab, feedScope === 'all_schools' && styles.segmentedTabActive]}
+          activeOpacity={0.8}
         >
-          <Text style={[styles.pillText, feedScope === 'all_schools' && styles.pillTextActive]}>
-            🌐 All Campuses
+          <Ionicons 
+            name="globe-outline" 
+            size={16} 
+            color={feedScope === 'all_schools' ? COLORS.primary : COLORS.textMuted} 
+          />
+          <Text style={[styles.segmentedText, feedScope === 'all_schools' && styles.segmentedTextActive]}>
+            All Campuses
           </Text>
         </TouchableOpacity>
       </View>
@@ -429,31 +441,43 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.bgMain,
   },
-  pillContainer: {
+  segmentedContainer: {
     flexDirection: 'row',
     backgroundColor: COLORS.bgInput,
-    marginHorizontal: 12,
+    marginHorizontal: 14,
     marginVertical: 10,
     borderRadius: RADIUS.full,
-    padding: 3,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: COLORS.borderColor,
   },
-  pillBtn: {
+  segmentedTab: {
     flex: 1,
-    paddingVertical: 8,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
     borderRadius: RADIUS.full,
   },
-  pillActive: {
+  segmentedTabActive: {
     backgroundColor: COLORS.bgCard,
-    ...COLORS.shadowSm,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: COLORS.borderColor,
   },
-  pillText: {
+  segmentedText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
     color: COLORS.textMuted,
   },
-  pillTextActive: {
+  segmentedTextActive: {
     color: COLORS.primary,
+    fontWeight: '800',
   },
   composeCard: {
     flexDirection: 'row',
