@@ -3,40 +3,40 @@ import { View } from 'react-native';
 import Svg, { Circle, Line, Text as SvgText } from 'react-native-svg';
 import { COLORS } from '../constants/theme';
 
-export default function QuadLogo({ height = 26, showText = true }) {
-  const width = showText ? 150 : 40;
+export default function QuadLogo({ height = 24, showText = true }) {
+  const width = showText ? 100 : 32;
 
   return (
-    <View style={{ height, width }}>
-      <Svg height={height} width={width} viewBox="0 0 240 60">
+    <View style={{ height, width, justifyContent: 'center' }}>
+      <Svg height={height} width={width} viewBox="0 0 160 48">
         {/* 'Q' Circle Ring */}
         <Circle 
-          cx="30" 
-          cy="30" 
-          r="18" 
+          cx="22" 
+          cy="24" 
+          r="14" 
           stroke={COLORS.navy} 
-          strokeWidth="6" 
+          strokeWidth="5" 
           fill="none"
         />
         {/* 'Q' Coral Slash Tail */}
         <Line 
-          x1="32" 
-          y1="32" 
-          x2="46" 
-          y2="46" 
+          x1="24" 
+          y1="24" 
+          x2="36" 
+          y2="36" 
           stroke={COLORS.coralSlash} 
-          strokeWidth="6" 
+          strokeWidth="5" 
           strokeLinecap="round" 
         />
 
         {showText && (
           <SvgText 
-            x="64" 
-            y="41" 
+            x="48" 
+            y="33" 
             fill={COLORS.navy} 
-            fontWeight="800" 
-            fontSize="34" 
-            letterSpacing="2"
+            fontWeight="900" 
+            fontSize="28" 
+            letterSpacing="1"
           >
             UAD
           </SvgText>

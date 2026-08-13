@@ -35,7 +35,7 @@ import {
 } from './src/data/mockData';
 import { COLORS } from './src/constants/theme';
 
-import { getOrCreateChat } from './src/services/chatService';
+import NotificationsModal from './src/components/NotificationsModal';
 
 const Tab = createBottomTabNavigator();
 
@@ -48,6 +48,7 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
   const [activeChat, setActiveChat] = useState(null);
 
   const [showSchoolPicker, setShowSchoolPicker] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   return (
     <NavigationContainer>
@@ -55,9 +56,9 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
       <Navbar
         currentSchool={currentSchool}
         onOpenSchoolPicker={() => setShowSchoolPicker(true)}
-        unreadNotifications={1}
+        unreadNotifications={2}
         onOpenSearch={() => alert('Search overlay')}
-        onOpenNotifications={() => alert('Notifications list')}
+        onOpenNotifications={() => setShowNotifications(true)}
         onOpenVerification={() =>
           setCurrentUser({ ...currentUser, isVerifiedSchool: true })
         }
@@ -68,6 +69,11 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
         onClose={() => setShowSchoolPicker(false)}
         selectedSchool={currentSchool}
         onSelectSchool={(school) => setCurrentSchool(school)}
+      />
+
+      <NotificationsModal
+        visible={showNotifications}
+        onClose={() => setShowNotifications(false)}
       />
 
       <Tab.Navigator

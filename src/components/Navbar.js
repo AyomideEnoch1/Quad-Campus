@@ -17,7 +17,7 @@ export default function Navbar({
       <View style={styles.container}>
         {/* Logo & Campus Button */}
         <View style={styles.leftSection}>
-          <QuadLogo height={24} showText={false} />
+          <QuadLogo height={24} showText={true} />
 
           <TouchableOpacity 
             onPress={onOpenSchoolPicker} 
