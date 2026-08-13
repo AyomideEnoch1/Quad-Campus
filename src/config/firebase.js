@@ -22,4 +22,6 @@ export const auth = initializeAuth(app, {
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
+export const GOOGLE_WEB_CLIENT_ID = "948016001653-735mk3rovee9jcustmj2a8kbi1ee56vq.apps.googleusercontent.com";
+
 export default app;
