@@ -84,12 +84,20 @@ export default function AuthScreen({ onSignUp, onLogin }) {
       let friendlyMessage = err.message || "Failed to authenticate.";
 
       if (err.code === 'auth/email-already-in-use') {
-        friendlyMessage = "This email is already registered! Please switch to the 'Log in' tab above.";
+        Alert.alert(
+          "Email Already Registered",
+          "An account with this email address already exists. Would you like to log in instead?",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Log In Now", onPress: () => setMode('login') }
+          ]
+        );
+        return;
       } else if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
-        friendlyMessage = "Incorrect email or password. Please check your credentials and try again.";
+        friendlyMessage = "Incorrect email or password. Please check your details and try again.";
       }
 
-      Alert.alert("Authentication Failed", friendlyMessage);
+      Alert.alert("Authentication Error", friendlyMessage);
     } finally {
       setLoading(false);
     }
