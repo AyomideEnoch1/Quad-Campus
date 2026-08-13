@@ -14,65 +14,70 @@ service cloud.firestore {
     // Users Collection
     match /users/{userId} {
       allow read: if true;
-      allow create, update, delete: if isSignedIn() && isOwner(userId);
+      allow create, update, delete: if true;
     }
 
     // Posts Collection
     match /posts/{postId} {
       allow read: if true;
-      allow create, update, delete: if isSignedIn();
+      allow create, update, delete: if true;
 
       // Post Comments
       match /comments/{commentId} {
         allow read: if true;
-        allow create, update, delete: if isSignedIn();
+        allow create, update, delete: if true;
       }
     }
 
     // Marketplace Collection
     match /marketplace_items/{itemId} {
       allow read: if true;
-      allow create, update, delete: if isSignedIn();
+      allow create, update, delete: if true;
     }
 
     // Chats & Messages
     match /chats/{chatId} {
-      allow read, create, update, delete: if isSignedIn();
+      allow read, create, update, delete: if true;
 
       match /messages/{messageId} {
-        allow read, create, update, delete: if isSignedIn();
+        allow read, create, update, delete: if true;
       }
     }
 
     // Clubs Collection
     match /clubs/{clubId} {
       allow read: if true;
-      allow create, update, delete: if isSignedIn();
+      allow create, update, delete: if true;
 
       match /members/{memberId} {
         allow read: if true;
-        allow write, delete: if isSignedIn();
+        allow write, delete: if true;
       }
 
       match /messages/{messageId} {
-        allow read, create, update, delete: if isSignedIn();
+        allow read, create, update, delete: if true;
       }
+    }
+
+    // Notifications Collection
+    match /notifications/{notifId} {
+      allow read, create, update, delete: if true;
     }
 
     // Ads System Collection
     match /ads/{adId} {
       allow read: if true;
-      allow create, update, delete: if isSignedIn();
+      allow create, update, delete: if true;
     }
 
     // Ad Impressions & Clicks Tracking
     match /ad_impressions/{impressionId} {
-      allow read, create: if true;
+      allow read, create, update: if true;
     }
 
     // Audit Logging Collection
     match /audit_log/{logId} {
-      allow read, create: if isSignedIn();
+      allow read, create: if true;
     }
   }
 }
