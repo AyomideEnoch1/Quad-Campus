@@ -11,6 +11,7 @@ import { FeedCardSkeleton } from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
 import RoleBadge from '../components/RoleBadge';
 import AdComposerModal from '../components/AdComposerModal';
+import AdsReviewScreen from './AdsReviewScreen';
 import { createNotificationEvent } from '../services/notificationService';
 
 export default function FeedScreen({ posts: initialPosts, currentSchool, currentUser, onOpenPostModal }) {
