@@ -122,6 +122,17 @@ export async function deletePost(postId) {
 }
 
 // Utility helper for relative time formatting
+/**
+ * Update post scope (e.g. broadcast from 'my_school' to 'all_schools')
+ */
+export async function updatePostScope(postId, newScope) {
+  const postRef = doc(db, 'posts', postId);
+  await updateDoc(postRef, {
+    scope: newScope,
+    updatedAt: serverTimestamp()
+  });
+}
+
 function formatTimeAgo(date) {
   const seconds = Math.floor((new Date() - date) / 1000);
   if (seconds < 60) return 'Just now';

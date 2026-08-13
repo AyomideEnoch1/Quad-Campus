@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl, Alert, Share } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
-import { subscribeFeedPosts, toggleLikePost, deletePost } from '../services/feedService';
+import { subscribeFeedPosts, toggleLikePost, deletePost, updatePostScope } from '../services/feedService';
 import { doc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import CreatePostModal from '../components/CreatePostModal';
@@ -17,6 +17,28 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
   const [refreshing, setRefreshing] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
   const [activeCommentPost, setActiveCommentPost] = useState(null);
+
+  const handleBroadcastToAllCampuses = (post) => {
+    Alert.alert(
+      "Broadcast to All Campuses",
+      "Would you like to make this post visible to students across all Nigerian universities?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Broadcast Nationwide 🌐",
+          onPress: async () => {
+            setPosts(prev => prev.map(p => p.id === post.id ? { ...p, scope: 'all_schools' } : p));
+            try {
+              await updatePostScope(post.id, 'all_schools');
+              Alert.alert("Broadcasted!", "Your post is now visible on the All Campuses feed.");
+            } catch (err) {
+              console.error("Error updating post scope:", err);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -134,9 +156,21 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
           <Text style={styles.timeText}>{item.createdAt}</Text>
 
           {isMe && (
-            <TouchableOpacity onPress={() => handleDeletePost(item)} style={styles.deletePostBtn}>
-              <Ionicons name="trash-outline" size={16} color={COLORS.textMuted} />
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              {item.scope === 'my_school' && (
+                <TouchableOpacity 
+                  onPress={() => handleBroadcastToAllCampuses(item)}
+                  style={styles.broadcastTagBtn}
+                >
+                  <Ionicons name="globe-outline" size={13} color={COLORS.primary} />
+                  <Text style={styles.broadcastTagText}>Broadcast</Text>
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity onPress={() => handleDeletePost(item)} style={styles.deletePostBtn}>
+                <Ionicons name="trash-outline" size={16} color={COLORS.textMuted} />
+              </TouchableOpacity>
+            </View>
           )}
         </View>
 
@@ -311,6 +345,20 @@ const styles = StyleSheet.create({
   deletePostBtn: {
     padding: 6,
     marginLeft: 4,
+  },
+  broadcastTagBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primaryLight,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.full,
+    gap: 3,
+  },
+  broadcastTagText: {
+    color: COLORS.primary,
+    fontSize: 10,
+    fontWeight: '700',
   },
   avatar: {
     width: 40,
