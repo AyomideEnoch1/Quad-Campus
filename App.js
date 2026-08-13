@@ -126,6 +126,7 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser 
             <ProfileScreen
               {...props}
               currentUser={currentUser}
+              setCurrentUser={setCurrentUser}
               onOpenVerification={() =>
                 setCurrentUser({ ...currentUser, isVerifiedSchool: true })
               }

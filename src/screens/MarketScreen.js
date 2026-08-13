@@ -3,11 +3,13 @@ import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, TextInput } 
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeMarketplaceItems } from '../services/marketService';
+import CreateItemModal from '../components/CreateItemModal';
 
-export default function MarketScreen({ items: initialItems, currentUser, onStartChatWithSeller }) {
+export default function MarketScreen({ items: initialItems, currentUser, currentSchool, onStartChatWithSeller }) {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [items, setItems] = useState(initialItems || []);
+  const [showItemModal, setShowItemModal] = useState(false);
 
   const categories = ['All', 'Textbooks', 'Tech', 'Dorm Gear', 'Tickets'];
 
@@ -88,7 +90,24 @@ export default function MarketScreen({ items: initialItems, currentUser, onStart
         numColumns={2}
         renderItem={renderItemCard}
         columnWrapperStyle={{ justifyContent: 'space-between' }}
-        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 24, gap: 12 }}
+        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 80, gap: 12 }}
+      />
+
+      {/* Floating Sell Item Button */}
+      <TouchableOpacity 
+        onPress={() => setShowItemModal(true)} 
+        style={styles.fabBtn}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="add" size={22} color="#fff" />
+        <Text style={styles.fabText}>Sell Item</Text>
+      </TouchableOpacity>
+
+      <CreateItemModal
+        visible={showItemModal}
+        onClose={() => setShowItemModal(false)}
+        currentUser={currentUser}
+        currentSchool={currentSchool}
       />
     </View>
   );
@@ -203,5 +222,23 @@ const styles = StyleSheet.create({
   sellerSchool: {
     fontSize: 11,
     color: COLORS.textMuted,
+  },
+  fabBtn: {
+    position: 'absolute',
+    bottom: 20,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: RADIUS.full,
+    gap: 6,
+    ...COLORS.shadowMd,
+  },
+  fabText: {
+    color: '#fff',
+    fontWeight: '800',
+    fontSize: 13,
   }
 });

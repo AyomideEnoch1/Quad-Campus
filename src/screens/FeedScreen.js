@@ -3,11 +3,13 @@ import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshContr
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeFeedPosts, toggleLikePost } from '../services/feedService';
+import CreatePostModal from '../components/CreatePostModal';
 
 export default function FeedScreen({ posts: initialPosts, currentSchool, currentUser, onOpenPostModal }) {
   const [feedScope, setFeedScope] = useState('my_school'); // 'my_school' | 'all_schools'
   const [posts, setPosts] = useState(initialPosts || []);
   const [refreshing, setRefreshing] = useState(false);
+  const [showPostModal, setShowPostModal] = useState(false);
 
   useEffect(() => {
     const schoolIdFilter = feedScope === 'my_school' ? currentSchool.id : null;
@@ -133,12 +135,19 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
         contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 24, gap: 12 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />}
         ListHeaderComponent={
-          <TouchableOpacity onPress={onOpenPostModal} style={styles.composeCard}>
+          <TouchableOpacity onPress={() => setShowPostModal(true)} style={styles.composeCard}>
             <Image source={{ uri: currentUser.avatarUrl }} style={{ width: 36, height: 36, borderRadius: 18 }} />
             <Text style={styles.composePlaceholder}>What's happening on campus?</Text>
             <Ionicons name="image-outline" size={20} color={COLORS.primary} />
           </TouchableOpacity>
         }
+      />
+
+      <CreatePostModal
+        visible={showPostModal}
+        onClose={() => setShowPostModal(false)}
+        currentUser={currentUser}
+        currentSchool={currentSchool}
       />
     </View>
   );

@@ -1,19 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
+import EditProfileModal from '../components/EditProfileModal';
 
-export default function ProfileScreen({ currentUser, onOpenVerification }) {
+export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerification }) {
+  const [showEditModal, setShowEditModal] = useState(false);
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
       {/* Banner */}
-      <Image source={{ uri: currentUser.bannerUrl }} style={styles.banner} />
+      <Image source={{ uri: currentUser.bannerUrl || 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop&q=80' }} style={styles.banner} />
 
       {/* Main Profile Info */}
       <View style={styles.headerCard}>
         {/* Avatar */}
         <View style={styles.avatarContainer}>
-          <Image source={{ uri: currentUser.avatarUrl }} style={styles.avatar} />
+          <Image source={{ uri: currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' }} style={styles.avatar} />
           {currentUser.isVerifiedSchool && (
             <View style={styles.verifiedBadge}>
               <Ionicons name="shield-checkmark" size={12} color="#fff" />
@@ -25,22 +28,22 @@ export default function ProfileScreen({ currentUser, onOpenVerification }) {
         <Text style={styles.username}>@{currentUser.username}</Text>
 
         <View style={styles.schoolPill}>
-          <Text style={styles.schoolText}>🏫 {currentUser.schoolName} • {currentUser.gradYear}</Text>
+          <Text style={styles.schoolText}>🏫 {currentUser.schoolName} • {currentUser.gradYear || 2026}</Text>
         </View>
 
-        <Text style={styles.bio}>{currentUser.bio}</Text>
+        <Text style={styles.bio}>{currentUser.bio || 'Student @ ' + currentUser.schoolName}</Text>
 
-        {/* Stats Row Bar (Direct reference to UI stats line: Followers / Following / Likes) */}
+        {/* Stats Row Bar */}
         <View style={styles.statsBar}>
           <View style={styles.statItem}>
-            <Text style={styles.statNum}>{currentUser.followersCount}</Text>
+            <Text style={styles.statNum}>{currentUser.followersCount || 0}</Text>
             <Text style={styles.statLabel}>Followers</Text>
           </View>
 
           <View style={styles.divider} />
 
           <View style={styles.statItem}>
-            <Text style={styles.statNum}>{currentUser.followingCount}</Text>
+            <Text style={styles.statNum}>{currentUser.followingCount || 0}</Text>
             <Text style={styles.statLabel}>Following</Text>
           </View>
 
@@ -48,7 +51,7 @@ export default function ProfileScreen({ currentUser, onOpenVerification }) {
 
           <View style={styles.statItem}>
             <Text style={[styles.statNum, { color: COLORS.primary }]}>
-              {(currentUser.likesReceived / 1000).toFixed(1)}k
+              {((currentUser.likesReceived || 0) / 1000).toFixed(1)}k
             </Text>
             <Text style={styles.statLabel}>Likes</Text>
           </View>
@@ -56,7 +59,7 @@ export default function ProfileScreen({ currentUser, onOpenVerification }) {
 
         {/* Action Buttons */}
         <View style={styles.btnRow}>
-          <TouchableOpacity style={styles.editBtn}>
+          <TouchableOpacity onPress={() => setShowEditModal(true)} style={styles.editBtn}>
             <Feather name="edit-3" size={14} color="#fff" />
             <Text style={styles.editBtnText}>Edit Profile</Text>
           </TouchableOpacity>
@@ -69,6 +72,17 @@ export default function ProfileScreen({ currentUser, onOpenVerification }) {
           )}
         </View>
       </View>
+
+      <EditProfileModal
+        visible={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        currentUser={currentUser}
+        onProfileUpdated={(updatedData) => {
+          if (setCurrentUser) {
+            setCurrentUser(prev => ({ ...prev, ...updatedData }));
+          }
+        }}
+      />
     </ScrollView>
   );
 }
