@@ -108,31 +108,37 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
     );
   };
 
-  const renderPost = ({ item }) => (
-    <View style={styles.postCard}>
-      {/* Header */}
-      <View style={styles.authorRow}>
-        <Image source={{ uri: item.authorAvatar }} style={styles.avatar} />
-        <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Text style={styles.authorName}>{item.authorName}</Text>
-            {item.isVerifiedAuthor && (
-              <View style={styles.verifiedTag}>
-                <Ionicons name="shield-checkmark" size={10} color="#fff" />
-                <Text style={styles.verifiedText}>.edu</Text>
-              </View>
-            )}
-          </View>
-          <Text style={styles.authorSub}>@{item.authorUsername} • {item.authorSchoolName}</Text>
-        </View>
-        <Text style={styles.timeText}>{item.createdAt}</Text>
+  const renderPost = ({ item }) => {
+    const isMe = item.authorId === currentUser?.uid;
+    const avatar = isMe ? (currentUser?.avatarUrl || item.authorAvatar) : item.authorAvatar;
+    const authorName = isMe ? (currentUser?.displayName || item.authorName) : item.authorName;
+    const authorUsername = isMe ? (currentUser?.username || item.authorUsername) : item.authorUsername;
 
-        {item.authorId === currentUser?.uid && (
-          <TouchableOpacity onPress={() => handleDeletePost(item)} style={styles.deletePostBtn}>
-            <Ionicons name="trash-outline" size={16} color={COLORS.textMuted} />
-          </TouchableOpacity>
-        )}
-      </View>
+    return (
+      <View style={styles.postCard}>
+        {/* Header */}
+        <View style={styles.authorRow}>
+          <Image source={{ uri: avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' }} style={styles.avatar} />
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Text style={styles.authorName}>{authorName}</Text>
+              {item.isVerifiedAuthor && (
+                <View style={styles.verifiedTag}>
+                  <Ionicons name="shield-checkmark" size={10} color="#fff" />
+                  <Text style={styles.verifiedText}>.edu</Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.authorSub}>@{authorUsername} • {item.authorSchoolName}</Text>
+          </View>
+          <Text style={styles.timeText}>{item.createdAt}</Text>
+
+          {isMe && (
+            <TouchableOpacity onPress={() => handleDeletePost(item)} style={styles.deletePostBtn}>
+              <Ionicons name="trash-outline" size={16} color={COLORS.textMuted} />
+            </TouchableOpacity>
+          )}
+        </View>
 
       {/* Body */}
       <Text style={styles.content}>{item.content}</Text>
