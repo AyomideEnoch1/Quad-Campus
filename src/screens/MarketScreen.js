@@ -4,6 +4,7 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeMarketplaceItems } from '../services/marketService';
 import CreateItemModal from '../components/CreateItemModal';
+import ItemDetailModal from '../components/ItemDetailModal';
 import { MarketCardSkeleton } from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
 
@@ -13,6 +14,7 @@ export default function MarketScreen({ items: initialItems, currentUser, current
   const [items, setItems] = useState(initialItems || []);
   const [loading, setLoading] = useState(true);
   const [showItemModal, setShowItemModal] = useState(false);
+  const [selectedDetailItem, setSelectedDetailItem] = useState(null);
 
   const categories = ['All', 'Textbooks', 'Tech', 'Dorm Gear', 'Tickets'];
 
@@ -36,12 +38,12 @@ export default function MarketScreen({ items: initialItems, currentUser, current
     <TouchableOpacity 
       style={styles.card}
       activeOpacity={0.8}
-      onPress={() => onStartChatWithSeller(item.sellerName, item)}
+      onPress={() => setSelectedDetailItem(item)}
     >
       <View style={styles.imgContainer}>
         <Image source={{ uri: item.imageUrl }} style={styles.itemImg} />
         <View style={styles.pricePill}>
-          <Text style={styles.priceText}>${item.price.toFixed(2)}</Text>
+          <Text style={styles.priceText}>₦{typeof item.price === 'number' ? item.price.toLocaleString() : item.price}</Text>
         </View>
         <View style={styles.conditionTag}>
           <Text style={styles.conditionText}>{item.condition}</Text>
@@ -51,7 +53,7 @@ export default function MarketScreen({ items: initialItems, currentUser, current
       <View style={styles.cardDetails}>
         <Text style={styles.itemTitle} numberOfLines={2}>{item.title}</Text>
         <View style={styles.cardFooter}>
-          <Text style={styles.sellerSchool}>🏫 {item.sellerSchoolName}</Text>
+          <Text style={styles.sellerSchool}>🏫 {item.sellerSchoolName || currentSchool?.shortName}</Text>
           {item.isVerifiedSeller && (
             <Ionicons name="shield-checkmark" size={14} color={COLORS.badgeGreen} />
           )}
@@ -129,6 +131,14 @@ export default function MarketScreen({ items: initialItems, currentUser, current
         onClose={() => setShowItemModal(false)}
         currentUser={currentUser}
         currentSchool={currentSchool}
+      />
+
+      <ItemDetailModal
+        visible={!!selectedDetailItem}
+        item={selectedDetailItem}
+        onClose={() => setSelectedDetailItem(null)}
+        currentUser={currentUser}
+        onStartChat={onStartChatWithSeller}
       />
     </View>
   );
