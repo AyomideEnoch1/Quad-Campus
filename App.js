@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Feather } from '@expo/vector-icons';
 import { View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets, SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { auth, db } from './src/config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -237,59 +237,69 @@ export default function App() {
 
   if (flow === 'auth') {
     return (
-      <AuthScreen
-        onSignUp={({ selectedSchool, user, email }) => {
-          if (selectedSchool) setCurrentSchool(selectedSchool);
-          const handle = email ? email.split('@')[0] : 'student';
-          setCurrentUser({
-            uid: user?.uid || 'usr_new',
-            email: email || '',
-            displayName: handle,
-            username: handle.toLowerCase(),
-            schoolId: selectedSchool?.id || SCHOOLS[0].id,
-            schoolName: selectedSchool?.name || SCHOOLS[0].name,
-            isVerifiedSchool: false,
-            bio: `Student @ ${selectedSchool?.name || 'University'}`,
-            major: 'General Studies',
-            gradYear: 2026,
-            avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
-            bannerUrl: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop&q=80',
-            followersCount: 0,
-            followingCount: 0,
-            likesReceived: 0,
-          });
-          setFlow('interests');
-        }}
-        onLogin={() => setFlow('main')}
-      />
+      <SafeAreaProvider>
+        <AuthScreen
+          onSignUp={({ selectedSchool, user, email }) => {
+            if (selectedSchool) setCurrentSchool(selectedSchool);
+            const handle = email ? email.split('@')[0] : 'student';
+            setCurrentUser({
+              uid: user?.uid || 'usr_new',
+              email: email || '',
+              displayName: handle,
+              username: handle.toLowerCase(),
+              schoolId: selectedSchool?.id || SCHOOLS[0].id,
+              schoolName: selectedSchool?.name || SCHOOLS[0].name,
+              isVerifiedSchool: false,
+              bio: `Student @ ${selectedSchool?.name || 'University'}`,
+              major: 'General Studies',
+              gradYear: 2026,
+              avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
+              bannerUrl: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop&q=80',
+              followersCount: 0,
+              followingCount: 0,
+              likesReceived: 0,
+            });
+            setFlow('interests');
+          }}
+          onLogin={() => setFlow('main')}
+        />
+      </SafeAreaProvider>
     );
   }
 
   if (flow === 'interests') {
-    return <InterestsScreen onContinue={() => setFlow('setup_profile')} />;
+    return (
+      <SafeAreaProvider>
+        <InterestsScreen onContinue={() => setFlow('setup_profile')} />
+      </SafeAreaProvider>
+    );
   }
 
   if (flow === 'setup_profile') {
     return (
-      <SetupProfileScreen
-        currentUser={currentUser}
-        onComplete={(updatedData) => {
-          if (updatedData) {
-            setCurrentUser(prev => ({ ...prev, ...updatedData }));
-          }
-          setFlow('main');
-        }}
-      />
+      <SafeAreaProvider>
+        <SetupProfileScreen
+          currentUser={currentUser}
+          onComplete={(updatedData) => {
+            if (updatedData) {
+              setCurrentUser(prev => ({ ...prev, ...updatedData }));
+            }
+            setFlow('main');
+          }}
+        />
+      </SafeAreaProvider>
     );
   }
 
   return (
-    <MainApp
-      currentSchool={currentSchool}
-      setCurrentSchool={setCurrentSchool}
-      currentUser={currentUser}
-      setCurrentUser={setCurrentUser}
-      onSignOut={() => setFlow('auth')}
-    />
+    <SafeAreaProvider>
+      <MainApp
+        currentSchool={currentSchool}
+        setCurrentSchool={setCurrentSchool}
+        currentUser={currentUser}
+        setCurrentUser={setCurrentUser}
+        onSignOut={() => setFlow('auth')}
+      />
+    </SafeAreaProvider>
   );
 }
