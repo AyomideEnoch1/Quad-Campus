@@ -7,9 +7,13 @@ import { signOut } from 'firebase/auth';
 import { deleteUserAccount } from '../services/userService';
 import EditProfileModal from '../components/EditProfileModal';
 import RoleBadge from '../components/RoleBadge';
+import AdComposerModal from '../components/AdComposerModal';
+import AdsReviewScreen from './AdsReviewScreen';
 
 export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerification, onSignOut }) {
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAdModal, setShowAdModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
 
   const handleSignOut = () => {
     Alert.alert(
@@ -110,6 +114,38 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
           </View>
         </View>
 
+        {/* Role Preview Switcher */}
+        <View style={styles.roleSection}>
+          <Text style={styles.roleSectionTitle}>Active Account Role Badge</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.roleRow}>
+            {[
+              { id: 'student', name: 'Student' },
+              { id: 'club_admin', name: 'Club Admin' },
+              { id: 'school_admin', name: 'School Admin' },
+              { id: 'super_admin', name: 'Super Admin' },
+              { id: 'advertiser', name: 'Advertiser' },
+              { id: 'ads_reviewer', name: 'Ads Reviewer' },
+            ].map(r => {
+              const currentRole = currentUser.role || 'student';
+              const isSelected = currentRole === r.id;
+              return (
+                <TouchableOpacity
+                  key={r.id}
+                  onPress={() => {
+                    if (setCurrentUser) {
+                      setCurrentUser(prev => ({ ...prev, role: r.id }));
+                    }
+                  }}
+                  style={[styles.rolePill, isSelected && styles.rolePillActive]}
+                >
+                  <RoleBadge role={r.id} size={14} />
+                  <Text style={[styles.rolePillText, isSelected && styles.rolePillTextActive]}>{r.name}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+
         {/* Action Buttons */}
         <View style={styles.btnRow}>
           <TouchableOpacity onPress={() => setShowEditModal(true)} style={styles.editBtn}>
@@ -117,12 +153,15 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
             <Text style={styles.editBtnText}>Edit Profile</Text>
           </TouchableOpacity>
 
-          {!currentUser.isVerifiedSchool && (
-            <TouchableOpacity onPress={onOpenVerification} style={styles.verifyBtn}>
-              <Ionicons name="shield-checkmark" size={14} color="#fff" />
-              <Text style={styles.verifyBtnText}>Verify .edu</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity onPress={() => setShowAdModal(true)} style={[styles.editBtn, { backgroundColor: '#3B82C4' }]}>
+            <Ionicons name="megaphone-outline" size={14} color="#fff" />
+            <Text style={styles.editBtnText}>Create Ad</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => setShowReviewModal(true)} style={[styles.editBtn, { backgroundColor: '#6B7280' }]}>
+            <Ionicons name="checkmark-done-circle-outline" size={14} color="#fff" />
+            <Text style={styles.editBtnText}>Review Queue</Text>
+          </TouchableOpacity>
 
           <TouchableOpacity onPress={handleSignOut} style={styles.signOutBtn}>
             <Feather name="log-out" size={14} color={COLORS.primary} />
@@ -143,6 +182,19 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
             setCurrentUser(prev => ({ ...prev, ...updatedData }));
           }
         }}
+      />
+
+      <AdComposerModal
+        visible={showAdModal}
+        onClose={() => setShowAdModal(false)}
+        currentUser={currentUser}
+        currentSchool={{ id: currentUser.schoolId || 'school', name: currentUser.schoolName || 'University', shortName: 'School' }}
+      />
+
+      <AdsReviewScreen
+        visible={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        currentUser={currentUser}
       />
     </ScrollView>
   );
@@ -288,5 +340,43 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: COLORS.primaryTint,
+  },
+  roleSection: {
+    width: '100%',
+    marginTop: 14,
+    gap: 6,
+  },
+  roleSectionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.textMuted,
+    textAlign: 'center',
+  },
+  roleRow: {
+    gap: 8,
+    paddingVertical: 4,
+  },
+  rolePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: COLORS.bgInput,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: RADIUS.full,
+  },
+  rolePillActive: {
+    backgroundColor: COLORS.primaryLight,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  rolePillText: {
+    fontSize: 12,
+    color: COLORS.textMuted,
+    fontWeight: '600',
+  },
+  rolePillTextActive: {
+    color: COLORS.primary,
+    fontWeight: '800',
   }
 });

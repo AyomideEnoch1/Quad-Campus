@@ -3,13 +3,15 @@ import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshContr
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeFeedPosts, toggleLikePost, deletePost, updatePostScope } from '../services/feedService';
-import { doc, updateDoc, increment } from 'firebase/firestore';
+import { doc, updateDoc, increment, collection, query, where, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import CreatePostModal from '../components/CreatePostModal';
 import CommentsModal from '../components/CommentsModal';
 import { FeedCardSkeleton } from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
 import RoleBadge from '../components/RoleBadge';
+import AdComposerModal from '../components/AdComposerModal';
+import AdsReviewScreen from './AdsReviewScreen';
 
 export default function FeedScreen({ posts: initialPosts, currentSchool, currentUser, onOpenPostModal }) {
   const [feedScope, setFeedScope] = useState('my_school'); // 'my_school' | 'all_schools'
@@ -41,10 +43,14 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
     );
   };
 
+  const [activeAds, setActiveAds] = useState([]);
+  const [showAdComposer, setShowAdComposer] = useState(false);
+  const [showAdsReview, setShowAdsReview] = useState(false);
+
   useEffect(() => {
     setLoading(true);
     const schoolIdFilter = feedScope === 'my_school' ? currentSchool.id : null;
-    const unsub = subscribeFeedPosts(schoolIdFilter, (livePosts) => {
+    const unsubFeed = subscribeFeedPosts(schoolIdFilter, (livePosts) => {
       if (livePosts) {
         setPosts(livePosts.map(p => ({
           ...p,
@@ -53,8 +59,37 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
       }
       setLoading(false);
     });
-    return unsub;
+
+    // Subscribe to approved ads
+    const qAds = query(collection(db, 'ads'), where('status', '==', 'approved'));
+    const unsubAds = onSnapshot(qAds, (snap) => {
+      const liveAds = snap.docs.map(d => ({ id: d.id, ...d.data(), isSponsored: true }));
+      setActiveAds(liveAds);
+    }, (err) => console.warn("Ads feed notice:", err));
+
+    return () => {
+      unsubFeed();
+      unsubAds();
+    };
   }, [feedScope, currentSchool.id, currentUser?.uid]);
+
+  // Interleave sponsored ads every 8th post
+  const combinedFeedData = React.useMemo(() => {
+    if (!activeAds || activeAds.length === 0) return posts;
+    const result = [];
+    let adIndex = 0;
+
+    posts.forEach((post, index) => {
+      result.push(post);
+      if ((index + 1) % 8 === 0) {
+        const adToInsert = activeAds[adIndex % activeAds.length];
+        result.push({ ...adToInsert, id: `ad_${adToInsert.id}_${index}` });
+        adIndex++;
+      }
+    });
+
+    return result;
+  }, [posts, activeAds]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -131,7 +166,61 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
     );
   };
 
+  const handleAdClick = async (ad) => {
+    try {
+      await addDoc(collection(db, 'ad_impressions'), {
+        adId: ad.id,
+        advertiserId: ad.advertiserId,
+        userId: currentUser?.uid,
+        action: 'CLICK',
+        timestamp: serverTimestamp()
+      });
+      await updateDoc(doc(db, 'ads', ad.id), {
+        clicksCount: increment(1)
+      });
+      Alert.alert("Sponsored Link", `Visiting ${ad.advertiserName}: ${ad.ctaUrl || 'Campaign Page'}`);
+    } catch (err) {
+      console.warn("Ad click tracking notice:", err);
+    }
+  };
+
   const renderPost = ({ item }) => {
+    if (item.isSponsored) {
+      return (
+        <View style={[styles.postCard, { borderColor: '#3B82C4', borderWidth: 1.5 }]}>
+          {/* Header */}
+          <View style={styles.authorRow}>
+            <Image source={{ uri: item.advertiserAvatar }} style={styles.avatar} />
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                <Text style={styles.authorName}>{item.advertiserName}</Text>
+                <RoleBadge role="advertiser" size={15} />
+              </View>
+              <Text style={styles.authorSub}>Promoted Campaign</Text>
+            </View>
+
+            <View style={styles.sponsoredTag}>
+              <Text style={styles.sponsoredText}>Sponsored</Text>
+            </View>
+          </View>
+
+          {/* Ad Copy */}
+          <Text style={styles.content}>{item.headline}</Text>
+
+          {/* Ad Creative Image */}
+          {item.imageUrl && (
+            <Image source={{ uri: item.imageUrl }} style={styles.mediaImage} />
+          )}
+
+          {/* Ad CTA Bar */}
+          <TouchableOpacity onPress={() => handleAdClick(item)} style={styles.adCtaBtn} activeOpacity={0.85}>
+            <Text style={styles.adCtaText}>{item.ctaText || 'Learn More'}</Text>
+            <Feather name="external-link" size={14} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
     const isMe = item.authorId === currentUser?.uid;
     const avatar = isMe ? (currentUser?.avatarUrl || item.authorAvatar) : item.authorAvatar;
     const authorName = isMe ? (currentUser?.displayName || item.authorName) : item.authorName;
@@ -241,7 +330,7 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
         </View>
       ) : (
         <FlatList
-          data={posts}
+          data={combinedFeedData}
           keyExtractor={item => item.id}
           renderItem={renderPost}
           contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 24, gap: 12 }}
@@ -276,6 +365,19 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
         visible={!!activeCommentPost}
         onClose={() => setActiveCommentPost(null)}
         post={activeCommentPost}
+        currentUser={currentUser}
+      />
+
+      <AdComposerModal
+        visible={showAdComposer}
+        onClose={() => setShowAdComposer(false)}
+        currentUser={currentUser}
+        currentSchool={currentSchool}
+      />
+
+      <AdsReviewScreen
+        visible={showAdsReview}
+        onClose={() => setShowAdsReview(false)}
         currentUser={currentUser}
       />
     </View>
@@ -416,5 +518,31 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: COLORS.textMuted,
+  },
+  sponsoredTag: {
+    backgroundColor: '#E0F2FE',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.full,
+  },
+  sponsoredText: {
+    color: '#0284C7',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  adCtaBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#3B82C4',
+    paddingVertical: 10,
+    borderRadius: RADIUS.lg,
+    gap: 6,
+    marginTop: 4,
+  },
+  adCtaText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '800',
   }
 });

@@ -48,6 +48,25 @@ service cloud.firestore {
       match /members/{memberId} {
         allow read, write, delete: if isSignedIn();
       }
+
+      match /messages/{messageId} {
+        allow read, create, update, delete: if isSignedIn();
+      }
+    }
+
+    // Ads System Collection
+    match /ads/{adId} {
+      allow read, create, update, delete: if isSignedIn();
+    }
+
+    // Ad Impressions & Clicks Tracking
+    match /ad_impressions/{impressionId} {
+      allow read, create: if isSignedIn();
+    }
+
+    // Audit Logging Collection
+    match /audit_log/{logId} {
+      allow read, create: if isSignedIn();
     }
   }
 }
