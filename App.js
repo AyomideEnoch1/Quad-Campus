@@ -13,6 +13,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import SplashScreen from './src/screens/SplashScreen';
 import AuthScreen from './src/screens/AuthScreen';
 import InterestsScreen from './src/screens/InterestsScreen';
+import SetupProfileScreen from './src/screens/SetupProfileScreen';
 
 // Main app screens
 import Navbar from './src/components/Navbar';
@@ -35,7 +36,7 @@ import { COLORS } from './src/constants/theme';
 const Tab = createBottomTabNavigator();
 
 // ─── Main Tab Navigator ──────────────────────────────────────────────────────
-function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser }) {
+function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser, onSignOut }) {
   const [posts, setPosts] = useState(INITIAL_POSTS);
   const [items, setItems] = useState(INITIAL_MARKETPLACE);
   const [clubs, setClubs] = useState(INITIAL_CLUBS);
@@ -102,6 +103,7 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser 
               items={items}
               setItems={setItems}
               currentUser={currentUser}
+              currentSchool={currentSchool}
               onStartChatWithSeller={(seller, item) =>
                 alert(`Start chat with ${seller} about ${item.title}`)
               }
@@ -127,6 +129,7 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser 
               {...props}
               currentUser={currentUser}
               setCurrentUser={setCurrentUser}
+              onSignOut={onSignOut}
               onOpenVerification={() =>
                 setCurrentUser({ ...currentUser, isVerifiedSchool: true })
               }
@@ -139,8 +142,9 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser 
 }
 
 // ─── Root App — onboarding flow ──────────────────────────────────────────────
+// Flow: splash → auth → interests → setup_profile → main
 export default function App() {
-  const [flow, setFlow] = useState('splash'); // 'splash' | 'auth' | 'interests' | 'main'
+  const [flow, setFlow] = useState('splash'); // 'splash' | 'auth' | 'interests' | 'setup_profile' | 'main'
   const [currentSchool, setCurrentSchool] = useState(SCHOOLS[0]);
   const [currentUser, setCurrentUser] = useState(CURRENT_USER);
 
@@ -176,6 +180,8 @@ export default function App() {
         } catch (e) {
           console.warn("Failed to fetch user doc on auth change:", e);
         }
+      } else {
+        setFlow('auth');
       }
     });
     return unsub;
@@ -222,7 +228,21 @@ export default function App() {
   }
 
   if (flow === 'interests') {
-    return <InterestsScreen onContinue={() => setFlow('main')} />;
+    return <InterestsScreen onContinue={() => setFlow('setup_profile')} />;
+  }
+
+  if (flow === 'setup_profile') {
+    return (
+      <SetupProfileScreen
+        currentUser={currentUser}
+        onComplete={(updatedData) => {
+          if (updatedData) {
+            setCurrentUser(prev => ({ ...prev, ...updatedData }));
+          }
+          setFlow('main');
+        }}
+      />
+    );
   }
 
   return (
@@ -231,6 +251,7 @@ export default function App() {
       setCurrentSchool={setCurrentSchool}
       currentUser={currentUser}
       setCurrentUser={setCurrentUser}
+      onSignOut={() => setFlow('auth')}
     />
   );
 }

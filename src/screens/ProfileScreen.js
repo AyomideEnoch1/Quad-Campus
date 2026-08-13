@@ -1,11 +1,35 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
+import { auth } from '../config/firebase';
+import { signOut } from 'firebase/auth';
 import EditProfileModal from '../components/EditProfileModal';
 
-export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerification }) {
+export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerification, onSignOut }) {
   const [showEditModal, setShowEditModal] = useState(false);
+
+  const handleSignOut = () => {
+    Alert.alert(
+      "Sign Out",
+      "Are you sure you want to sign out?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Sign Out", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await signOut(auth);
+              if (onSignOut) onSignOut();
+            } catch (err) {
+              console.error("Error signing out:", err);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
@@ -70,6 +94,10 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
               <Text style={styles.verifyBtnText}>Verify .edu</Text>
             </TouchableOpacity>
           )}
+
+          <TouchableOpacity onPress={handleSignOut} style={styles.signOutBtn}>
+            <Feather name="log-out" size={14} color={COLORS.primary} />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -217,5 +245,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     fontWeight: '700',
+  },
+  signOutBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: RADIUS.full,
+    backgroundColor: COLORS.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.primaryTint,
   }
 });
