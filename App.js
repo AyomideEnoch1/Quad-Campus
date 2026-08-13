@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Feather } from '@expo/vector-icons';
 import { View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { auth, db } from './src/config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -41,6 +42,9 @@ const Tab = createBottomTabNavigator();
 
 // ─── Main Tab Navigator ──────────────────────────────────────────────────────
 function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser, onSignOut }) {
+  const insets = useSafeAreaInsets();
+  const bottomPadding = Math.max(insets.bottom, 10);
+
   const [posts, setPosts] = useState(INITIAL_POSTS);
   const [items, setItems] = useState(INITIAL_MARKETPLACE);
   const [clubs, setClubs] = useState(INITIAL_CLUBS);
@@ -84,8 +88,8 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
           tabBarStyle: {
             backgroundColor: COLORS.bgCard,
             borderTopColor: COLORS.borderColor,
-            height: 60,
-            paddingBottom: 8,
+            height: 56 + bottomPadding,
+            paddingBottom: bottomPadding,
             paddingTop: 6,
           },
           tabBarIcon: ({ color }) => {
