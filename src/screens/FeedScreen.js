@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl, Alert, Share, Modal } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert, Share, Modal } from 'react-native';
+import { Image } from 'expo-image';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeFeedPosts, toggleLikePost, deletePost, updatePostScope } from '../services/feedService';

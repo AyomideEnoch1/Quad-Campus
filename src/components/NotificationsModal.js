@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import {
-  Modal, View, Text, StyleSheet, FlatList, Image, TouchableOpacity, SafeAreaView, Alert
-} from 'react-native';
+import { Modal, View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 

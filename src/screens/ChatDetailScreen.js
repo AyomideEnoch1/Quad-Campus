@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity,
-  KeyboardAvoidingView, Platform, Image
-} from 'react-native';
+import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity,
+  KeyboardAvoidingView, Platform } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';

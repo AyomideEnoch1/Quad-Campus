@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import {
-  View, Text, TextInput, TouchableOpacity,
-  StyleSheet, Image, ScrollView, ActivityIndicator, Alert, KeyboardAvoidingView, Platform
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity,
+  StyleSheet, ScrollView, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { BRAND } from '../constants/theme';

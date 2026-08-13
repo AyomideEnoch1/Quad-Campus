@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import {
-  Modal, View, Text, TextInput, TouchableOpacity,
-  StyleSheet, Image, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform, Alert
-} from 'react-native';
+import { Modal, View, Text, TextInput, TouchableOpacity,
+  StyleSheet, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS, RADIUS } from '../constants/theme';

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Modal, View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, TextInput, ActivityIndicator, useWindowDimensions
-} from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, TextInput, ActivityIndicator, useWindowDimensions } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Modal, View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Image, SafeAreaView, ActivityIndicator
-} from 'react-native';
+import { Modal, View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import RoleBadge from './RoleBadge';

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeUserChats } from '../services/chatService';

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Modal, View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity,
-  KeyboardAvoidingView, Platform, Image, ActivityIndicator
-} from 'react-native';
+import { Modal, View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity,
+  KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeComments, addComment } from '../services/commentService';

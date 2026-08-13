@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { Image } from 'expo-image';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeMarketplaceItems } from '../services/marketService';

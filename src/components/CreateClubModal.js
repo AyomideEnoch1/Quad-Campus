@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import {
-  Modal, View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView,
-  Image, ActivityIndicator, Alert, KeyboardAvoidingView, Platform
-} from 'react-native';
+import { Modal, View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView,
+  ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
