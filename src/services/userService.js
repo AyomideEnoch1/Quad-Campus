@@ -13,7 +13,7 @@ import {
   increment,
   writeBatch
 } from 'firebase/firestore';
-import { deleteUser } from 'firebase/auth';
+import { deleteUser, signOut } from 'firebase/auth';
 
 /**
  * Fetch a single user profile doc by UID
