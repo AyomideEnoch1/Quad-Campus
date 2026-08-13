@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Modal, View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, TextInput, ActivityIndicator
+  Modal, View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, TextInput, ActivityIndicator, useWindowDimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
@@ -16,11 +16,13 @@ export default function ItemDetailModal({
   onItemUpdated,
   onOpenVendorStorefront 
 }) {
+  const { width, height } = useWindowDimensions();
+  const heroHeight = Math.min(height * 0.35, 260);
+
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
-  const [location, setLocation] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -28,65 +30,66 @@ export default function ItemDetailModal({
       setTitle(item.title || '');
       setPrice(item.price ? String(item.price) : '');
       setDescription(item.description || '');
-      setLocation(item.location || '');
       setIsEditing(false);
     }
   }, [item]);
 
   if (!item) return null;
 
-  const isSeller = item.sellerId === currentUser?.uid;
+  const isSeller = currentUser?.uid === item.sellerId;
 
   const handleSaveEdits = async () => {
-    if (!title.trim() || !price.trim()) {
-      Alert.alert("Missing Info", "Title and price are required.");
-      return;
-    }
-
+    if (!title.trim() || !price.trim() || saving) return;
     setSaving(true);
+
     try {
-      const updateData = {
+      const updatedFields = {
         title: title.trim(),
         price: parseFloat(price) || 0,
-        description: description.trim(),
-        location: location.trim()
+        description: description.trim()
       };
-
-      await updateListing(item.id, updateData);
-      item.title = updateData.title;
-      item.price = updateData.price;
-      item.description = updateData.description;
-      item.location = updateData.location;
-
+      await updateListing(item.id, updatedFields);
+      if (onItemUpdated) onItemUpdated({ ...item, ...updatedFields });
       setIsEditing(false);
-      Alert.alert("Listing Updated!", "Your product details have been saved.");
+      Alert.alert("Listing Updated ✅", "Your product details have been saved.");
     } catch (err) {
       console.error("Error updating listing:", err);
-      Alert.alert("Error", "Failed to save listing edits.");
+      Alert.alert("Error", "Failed to update listing.");
     } finally {
       setSaving(false);
     }
   };
 
   const handleMarkSold = async () => {
-    try {
-      await markItemSold(item.id);
-      Alert.alert("Item Marked Sold", "This product is now marked as sold.");
-      onClose();
-    } catch (err) {
-      console.error("Error marking item sold:", err);
-    }
+    Alert.alert(
+      "Mark Item as Sold",
+      "Are you sure you want to mark this item as sold?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Mark Sold", 
+          onPress: async () => {
+            try {
+              await markItemSold(item.id);
+              onClose();
+            } catch (err) {
+              console.error("Error marking sold:", err);
+            }
+          }
+        }
+      ]
+    );
   };
 
   const handleDelete = async () => {
     Alert.alert(
       "Delete Listing",
-      "Are you sure you want to delete this listing?",
+      "Are you sure you want to delete this listing permanently?",
       [
         { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
+        { 
+          text: "Delete", 
+          style: "destructive", 
           onPress: async () => {
             try {
               await deleteListing(item.id);
@@ -122,8 +125,8 @@ export default function ItemDetailModal({
 
         {/* Scrollable Content */}
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {/* Large Hero Image */}
-          <View style={styles.heroImageContainer}>
+          {/* Large Responsive Hero Image */}
+          <View style={[styles.heroImageContainer, { height: heroHeight }]}>
             <Image 
               source={{ uri: item.imageUrl || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&auto=format&fit=crop&q=80' }} 
               style={styles.heroImage} 
@@ -160,24 +163,13 @@ export default function ItemDetailModal({
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Pickup Location</Text>
-                <TextInput 
-                  style={styles.input} 
-                  value={location} 
-                  onChangeText={setLocation} 
-                  placeholder="Campus Location"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Item Overview / Description</Text>
+                <Text style={styles.label}>Description</Text>
                 <TextInput 
                   style={[styles.input, styles.textArea]} 
                   value={description} 
                   onChangeText={setDescription} 
                   multiline
-                  numberOfLines={4}
-                  placeholder="Description..."
+                  placeholder="Item details..."
                 />
               </View>
 
@@ -195,7 +187,7 @@ export default function ItemDetailModal({
             <>
               {/* Title & Price Header */}
               <View style={styles.headerSection}>
-                <View style={{ flex: 1 }}>
+                <View style={{ flex: 1, paddingRight: 8 }}>
                   <Text style={styles.title}>{item.title}</Text>
                   <Text style={styles.category}>{item.category}</Text>
                 </View>
@@ -215,10 +207,10 @@ export default function ItemDetailModal({
                   style={styles.sellerAvatar} 
                 />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.sellerName}>{item.sellerName}</Text>
+                  <Text style={styles.sellerName} numberOfLines={1}>{item.sellerName}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
                     <Ionicons name="school-outline" size={12} color={COLORS.primary} />
-                    <Text style={styles.sellerSchool}>{item.sellerSchoolName || 'Campus Seller'}</Text>
+                    <Text style={styles.sellerSchool} numberOfLines={1}>{item.sellerSchoolName || 'Campus Seller'}</Text>
                   </View>
                 </View>
                 <View style={styles.storefrontBadge}>
@@ -229,12 +221,9 @@ export default function ItemDetailModal({
               {/* Item Description / Overview */}
               <View style={styles.descriptionSection}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={styles.sectionTitle}>Item Overview</Text>
-                  {isSeller && (
-                    <TouchableOpacity onPress={() => setIsEditing(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      <Feather name="edit-2" size={14} color={COLORS.primary} />
-                      <Text style={{ fontSize: 12, color: COLORS.primary, fontWeight: '700' }}>Edit</Text>
-                    </TouchableOpacity>
+                  <Text style={styles.sectionTitle}>Product Description</Text>
+                  {item.createdAt && (
+                    <Text style={{ fontSize: 11, color: COLORS.textMuted }}>Posted {item.createdAt}</Text>
                   )}
                 </View>
                 <Text style={styles.descriptionText}>
@@ -242,19 +231,19 @@ export default function ItemDetailModal({
                 </Text>
               </View>
 
-              {/* Action Buttons */}
+              {/* Responsive Action Buttons */}
               <View style={styles.actionContainer}>
                 {isSeller ? (
-                  <View style={{ flexDirection: 'row', gap: 10 }}>
-                    <TouchableOpacity onPress={() => setIsEditing(true)} style={[styles.ctaBtn, { backgroundColor: COLORS.primary, flex: 1 }]}>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+                    <TouchableOpacity onPress={() => setIsEditing(true)} style={[styles.ctaBtn, { backgroundColor: COLORS.primary, flex: 1, minWidth: 110 }]}>
                       <Feather name="edit" size={18} color="#fff" />
                       <Text style={styles.ctaText}>Edit Item</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={handleMarkSold} style={[styles.ctaBtn, { backgroundColor: COLORS.badgeGreen, flex: 1 }]}>
+                    <TouchableOpacity onPress={handleMarkSold} style={[styles.ctaBtn, { backgroundColor: COLORS.badgeGreen, flex: 1, minWidth: 110 }]}>
                       <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
                       <Text style={styles.ctaText}>Mark Sold</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={handleDelete} style={[styles.ctaBtn, { backgroundColor: '#EF4444', width: 50 }]}>
+                    <TouchableOpacity onPress={handleDelete} style={[styles.ctaBtn, { backgroundColor: '#EF4444', width: 48 }]}>
                       <Ionicons name="trash-outline" size={20} color="#fff" />
                     </TouchableOpacity>
                   </View>

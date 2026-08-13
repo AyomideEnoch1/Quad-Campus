@@ -64,7 +64,7 @@ export default function MarketScreen({ items: initialItems, currentUser, current
             <Text style={styles.vendorStoreText}>{item.sellerName ? item.sellerName.split(' ')[0] : 'Store'}</Text>
           </TouchableOpacity>
 
-          <Text style={styles.sellerSchool}>🏫 {item.sellerSchoolName || currentSchool?.shortName}</Text>
+          <Text style={styles.sellerSchool} numberOfLines={1}>🏫 {item.sellerSchoolName || currentSchool?.shortName}</Text>
         </View>
       </View>
     </TouchableOpacity>
