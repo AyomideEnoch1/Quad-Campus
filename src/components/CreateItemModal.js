@@ -48,7 +48,7 @@ export default function CreateItemModal({ visible, onClose, currentUser, current
 
     setSubmitting(true);
     try {
-      let imageUrl = 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&auto=format&fit=crop&q=80';
+      let imageUrl = 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&fm=jpg&fit=crop&q=80';
       if (selectedImage) {
         imageUrl = await uploadImage(selectedImage, 'marketplace');
       }
@@ -56,7 +56,7 @@ export default function CreateItemModal({ visible, onClose, currentUser, current
       await createListing({
         sellerId: currentUser.uid,
         sellerName: currentUser.displayName || 'Student Seller',
-        sellerAvatar: currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
+        sellerAvatar: currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80',
         sellerSchoolId: currentSchool.id,
         sellerSchoolName: currentSchool.name,
         isVerifiedSeller: !!currentUser.isVerifiedSchool,

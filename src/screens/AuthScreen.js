@@ -66,8 +66,8 @@ export default function AuthScreen({ onSignUp, onLogin }) {
           bio: `Student @ ${selectedSchool.name}`,
           major: 'General Studies',
           gradYear: 2026,
-          avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
-          bannerUrl: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop&q=80',
+          avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80',
+          bannerUrl: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&fm=jpg&fit=crop&q=80',
           followersCount: 0,
           followingCount: 0,
           likesReceived: 0,
@@ -116,7 +116,7 @@ export default function AuthScreen({ onSignUp, onLogin }) {
         schoolId: SCHOOLS[0].id,
         schoolName: SCHOOLS[0].name,
         isVerifiedSchool: true,
-        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80'
+        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80'
       };
 
       try {

@@ -47,7 +47,7 @@ export default function ChatScreen({ chats: initialChats, currentUser, activeCha
       activeOpacity={0.7}
     >
       <View style={styles.avatarContainer}>
-        <Image source={{ uri: item.partner.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' }} style={styles.avatar} />
+        <Image source={{ uri: item.partner.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' }} style={styles.avatar} />
         <View style={styles.onlineDot} />
       </View>
 

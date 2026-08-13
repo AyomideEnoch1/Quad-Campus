@@ -40,7 +40,7 @@ export default function ChatDetailScreen({ chatId, partner, currentUser, onBack 
       <View style={[styles.msgWrapper, isMe ? styles.msgRight : styles.msgLeft]}>
         {!isMe && (
           <Image 
-            source={{ uri: partner?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' }} 
+            source={{ uri: partner?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' }} 
             style={styles.smallAvatar} 
           />
         )}
@@ -62,7 +62,7 @@ export default function ChatDetailScreen({ chatId, partner, currentUser, onBack 
         </TouchableOpacity>
         
         <Image 
-          source={{ uri: partner?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' }} 
+          source={{ uri: partner?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' }} 
           style={styles.headerAvatar} 
         />
 

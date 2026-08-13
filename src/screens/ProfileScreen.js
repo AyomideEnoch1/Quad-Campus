@@ -66,7 +66,7 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
       {/* Banner with 3-Dots Settings Menu */}
       <View style={{ position: 'relative' }}>
-        <Image source={{ uri: currentUser.bannerUrl || 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop&q=80' }} style={styles.banner} />
+        <Image source={{ uri: currentUser.bannerUrl || 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&fm=jpg&fit=crop&q=80' }} style={styles.banner} />
         <TouchableOpacity 
           onPress={() => setShowSettingsMenu(true)} 
           style={styles.topMenuBtn}
@@ -80,7 +80,7 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
       <View style={styles.headerCard}>
         {/* Avatar */}
         <View style={styles.avatarContainer}>
-          <Image source={{ uri: currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' }} style={styles.avatar} />
+          <Image source={{ uri: currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' }} style={styles.avatar} />
           {currentUser.isVerifiedSchool && (
             <View style={styles.verifiedBadge}>
               <Ionicons name="shield-checkmark" size={12} color="#fff" />

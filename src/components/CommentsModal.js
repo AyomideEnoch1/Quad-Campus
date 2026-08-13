@@ -42,7 +42,7 @@ export default function CommentsModal({ visible, onClose, post, currentUser }) {
       await addComment(post.id, {
         authorId: currentUser.uid,
         authorName: currentUser.displayName || 'Student',
-        authorAvatar: currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
+        authorAvatar: currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80',
         text: textToSend
       });
     } catch (err) {

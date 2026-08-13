@@ -55,7 +55,7 @@ export default function CreatePostModal({ visible, onClose, currentUser, current
         authorId: currentUser.uid,
         authorName: currentUser.displayName || 'Student',
         authorUsername: currentUser.username || 'student',
-        authorAvatar: currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
+        authorAvatar: currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80',
         authorSchoolId: currentSchool.id,
         authorSchoolName: currentSchool.name,
         isVerifiedAuthor: !!currentUser.isVerifiedSchool,

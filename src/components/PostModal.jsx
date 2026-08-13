@@ -12,9 +12,9 @@ export default function PostModal({ isOpen, onClose, currentUser, currentSchool,
   if (!isOpen) return null;
 
   const sampleImages = [
-    'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80'
+    'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&fm=jpg&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&fm=jpg&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&fm=jpg&fit=crop&q=80'
   ];
 
   const handleSubmit = (e) => {

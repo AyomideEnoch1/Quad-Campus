@@ -39,7 +39,7 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
       await sendClubMessage(club.id, {
         senderId: currentUser.uid,
         senderName: currentUser.displayName || 'Student',
-        senderAvatar: currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
+        senderAvatar: currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80',
         text: textToSend
       });
     } catch (err) {
@@ -56,7 +56,7 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
         await sendClubMessage(club.id, {
           senderId: currentUser.uid,
           senderName: currentUser.displayName || 'Student',
-          senderAvatar: currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
+          senderAvatar: currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80',
           senderRole: currentUser.role || 'student',
           mediaUrl: url,
           text: ''
@@ -73,7 +73,7 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
       <View style={[styles.msgRow, isMe && styles.msgRowMe]}>
         {!isMe && (
           <Image 
-            source={{ uri: item.senderAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' }} 
+            source={{ uri: item.senderAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' }} 
             style={styles.msgAvatar} 
           />
         )}
@@ -141,7 +141,7 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
               <TouchableOpacity onPress={() => setActiveTab('overview')} style={styles.backBtn} activeOpacity={0.7}>
                 <Ionicons name="arrow-back" size={22} color={COLORS.textMain} />
               </TouchableOpacity>
-              <Image source={{ uri: club.logoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' }} style={styles.chatHeaderAvatar} />
+              <Image source={{ uri: club.logoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' }} style={styles.chatHeaderAvatar} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.chatHeaderTitle} numberOfLines={1}>{club.name}</Text>
                 <Text style={styles.chatHeaderSub}>{club.memberCount || 1} members</Text>
@@ -214,12 +214,12 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
             {/* Banner Image */}
             <View style={styles.heroBanner}>
               <Image 
-                source={{ uri: club.bannerUrl || 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80' }} 
+                source={{ uri: club.bannerUrl || 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&fm=jpg&fit=crop&q=80' }} 
                 style={styles.bannerImg} 
               />
               <View style={styles.logoWrapper}>
                 <Image 
-                  source={{ uri: club.logoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' }} 
+                  source={{ uri: club.logoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' }} 
                   style={styles.logoImg} 
                 />
               </View>

@@ -128,7 +128,7 @@ export default function ItemDetailModal({
           {/* Large Responsive Hero Image */}
           <View style={[styles.heroImageContainer, { height: heroHeight }]}>
             <Image 
-              source={{ uri: item.imageUrl || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&auto=format&fit=crop&q=80' }} 
+              source={{ uri: item.imageUrl || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&fm=jpg&fit=crop&q=80' }} 
               style={styles.heroImage} 
             />
             <View style={styles.conditionBadge}>
@@ -203,7 +203,7 @@ export default function ItemDetailModal({
                 activeOpacity={0.85}
               >
                 <Image 
-                  source={{ uri: item.sellerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' }} 
+                  source={{ uri: item.sellerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' }} 
                   style={styles.sellerAvatar} 
                 />
                 <View style={{ flex: 1 }}>

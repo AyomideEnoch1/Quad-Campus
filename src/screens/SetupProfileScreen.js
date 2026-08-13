@@ -85,7 +85,7 @@ export default function SetupProfileScreen({ currentUser, onComplete }) {
         <View style={styles.avatarSection}>
           <TouchableOpacity onPress={pickAvatar} style={styles.avatarPicker} activeOpacity={0.8}>
             <Image 
-              source={{ uri: avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' }} 
+              source={{ uri: avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' }} 
               style={styles.avatarImg} 
             />
             <View style={styles.cameraIcon}>

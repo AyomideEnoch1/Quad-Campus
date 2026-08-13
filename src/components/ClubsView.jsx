@@ -50,8 +50,8 @@ export default function ClubsView({
       isInterSchool,
       category: newCategory,
       memberCount: 1,
-      logoUrl: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=400&auto=format&fit=crop&q=80',
-      bannerUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop&q=80',
+      logoUrl: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=400&fm=jpg&fit=crop&q=80',
+      bannerUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&fm=jpg&fit=crop&q=80',
       description: 'Official student organization on QUAD.',
       isJoined: true
     };

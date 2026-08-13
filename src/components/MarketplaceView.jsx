@@ -46,7 +46,7 @@ export default function MarketplaceView({
       category: newCategory,
       condition: newCondition,
       description: newDesc || 'No description provided.',
-      imageUrl: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=600&auto=format&fit=crop&q=80',
+      imageUrl: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=600&fm=jpg&fit=crop&q=80',
       location: newLocation || currentUser.schoolName + ' Yard',
       status: 'available',
       createdAt: 'Just now'

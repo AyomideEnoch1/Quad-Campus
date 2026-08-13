@@ -159,7 +159,7 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
                   const partner = {
                     uid: item.sellerId || `seller_${item.id}`,
                     displayName: sellerName || item.sellerName || 'Seller',
-                    avatarUrl: item.sellerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80'
+                    avatarUrl: item.sellerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80'
                   };
                   const chatId = await getOrCreateChat(currentUser, partner);
                   setActiveChat({ id: chatId, partner });
@@ -236,8 +236,8 @@ export default function App() {
               bio: data.bio || `Student @ ${data.schoolName || 'University'}`,
               major: data.major || 'General Studies',
               gradYear: data.gradYear || 2026,
-              avatarUrl: data.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
-              bannerUrl: data.bannerUrl || 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop&q=80',
+              avatarUrl: data.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80',
+              bannerUrl: data.bannerUrl || 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&fm=jpg&fit=crop&q=80',
               followersCount: data.followersCount || 0,
               followingCount: data.followingCount || 0,
               likesReceived: data.likesReceived || 0,
@@ -286,8 +286,8 @@ export default function App() {
               bio: `Student @ ${selectedSchool?.name || 'University'}`,
               major: 'General Studies',
               gradYear: 2026,
-              avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
-              bannerUrl: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop&q=80',
+              avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80',
+              bannerUrl: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&fm=jpg&fit=crop&q=80',
               followersCount: 0,
               followingCount: 0,
               likesReceived: 0,

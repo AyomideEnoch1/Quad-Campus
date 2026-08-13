@@ -25,8 +25,8 @@ export default function CreateClubModal({ visible, onClose, currentUser, current
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [description, setDescription] = useState('');
   const [isInterSchool, setIsInterSchool] = useState(false);
-  const [bannerUrl, setBannerUrl] = useState('https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80');
-  const [logoUrl, setLogoUrl] = useState('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80');
+  const [bannerUrl, setBannerUrl] = useState('https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&fm=jpg&fit=crop&q=80');
+  const [logoUrl, setLogoUrl] = useState('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80');
   const [uploadingImage, setUploadingImage] = useState(false);
   const [loading, setLoading] = useState(false);
 

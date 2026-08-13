@@ -23,7 +23,7 @@ export default function AdComposerModal({ visible, onClose, currentUser, current
   const [category, setCategory] = useState(INTEREST_CATEGORIES[0]);
   const [targetSchool, setTargetSchool] = useState('All Campuses');
   const [budget, setBudget] = useState('10000');
-  const [bannerUrl, setBannerUrl] = useState('https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&auto=format&fit=crop&q=80');
+  const [bannerUrl, setBannerUrl] = useState('https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&fm=jpg&fit=crop&q=80');
   const [uploadingImage, setUploadingImage] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -50,7 +50,7 @@ export default function AdComposerModal({ visible, onClose, currentUser, current
       const adData = {
         advertiserId: currentUser.uid,
         advertiserName: currentUser.displayName || 'Advertiser',
-        advertiserAvatar: currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
+        advertiserAvatar: currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80',
         headline: headline.trim(),
         imageUrl: bannerUrl,
         ctaText: ctaText.trim() || 'Learn More',

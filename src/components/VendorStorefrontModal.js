@@ -39,7 +39,7 @@ export default function VendorStorefrontModal({ visible, onClose, seller, items 
   );
 
   const sellerName = seller.displayName || seller.sellerName || 'Student Seller';
-  const sellerAvatar = seller.avatarUrl || seller.sellerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80';
+  const sellerAvatar = seller.avatarUrl || seller.sellerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80';
   const schoolName = seller.schoolName || seller.sellerSchool || 'University';
 
   return (

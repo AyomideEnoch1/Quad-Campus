@@ -13,7 +13,7 @@ const INITIAL_NOTIFICATIONS = [
     time: '5m ago',
     type: 'like',
     read: false,
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80'
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80'
   },
   {
     id: 'n2',
@@ -22,7 +22,7 @@ const INITIAL_NOTIFICATIONS = [
     time: '1h ago',
     type: 'market',
     read: false,
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80'
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&fm=jpg&fit=crop&q=80'
   },
   {
     id: 'n3',
@@ -31,7 +31,7 @@ const INITIAL_NOTIFICATIONS = [
     time: '3h ago',
     type: 'club',
     read: true,
-    avatar: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&auto=format&fit=crop&q=80'
+    avatar: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&fm=jpg&fit=crop&q=80'
   }
 ];
 
