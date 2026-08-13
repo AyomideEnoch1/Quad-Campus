@@ -34,6 +34,8 @@ import {
 } from './src/data/mockData';
 import { COLORS } from './src/constants/theme';
 
+import { getOrCreateChat } from './src/services/chatService';
+
 const Tab = createBottomTabNavigator();
 
 // ─── Main Tab Navigator ──────────────────────────────────────────────────────
@@ -42,6 +44,7 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
   const [items, setItems] = useState(INITIAL_MARKETPLACE);
   const [clubs, setClubs] = useState(INITIAL_CLUBS);
   const [chats, setChats] = useState(INITIAL_CHATS);
+  const [activeChat, setActiveChat] = useState(null);
 
   return (
     <NavigationContainer>
@@ -105,16 +108,33 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
               setItems={setItems}
               currentUser={currentUser}
               currentSchool={currentSchool}
-              onStartChatWithSeller={(seller, item) =>
-                alert(`Start chat with ${seller} about ${item.title}`)
-              }
+              onStartChatWithSeller={async (sellerName, item) => {
+                try {
+                  const partner = {
+                    uid: item.sellerId || `seller_${item.id}`,
+                    displayName: sellerName || item.sellerName || 'Seller',
+                    avatarUrl: item.sellerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80'
+                  };
+                  const chatId = await getOrCreateChat(currentUser, partner);
+                  setActiveChat({ id: chatId, partner });
+                  props.navigation.navigate('Chat');
+                } catch (e) {
+                  console.error("Error starting chat with seller:", e);
+                }
+              }}
             />
           )}
         </Tab.Screen>
 
         <Tab.Screen name="Chat">
           {props => (
-            <ChatScreen {...props} chats={chats} currentUser={currentUser} />
+            <ChatScreen 
+              {...props} 
+              chats={chats} 
+              currentUser={currentUser} 
+              activeChat={activeChat}
+              onClearActiveChat={() => setActiveChat(null)}
+            />
           )}
         </Tab.Screen>
 

@@ -4,9 +4,17 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeUserChats } from '../services/chatService';
 import EmptyState from '../components/EmptyState';
+import ChatDetailScreen from './ChatDetailScreen';
 
-export default function ChatScreen({ chats: initialChats, currentUser }) {
+export default function ChatScreen({ chats: initialChats, currentUser, activeChat: externalActiveChat, onClearActiveChat }) {
   const [chats, setChats] = useState(initialChats || []);
+  const [activeChat, setActiveChat] = useState(externalActiveChat || null);
+
+  useEffect(() => {
+    if (externalActiveChat) {
+      setActiveChat(externalActiveChat);
+    }
+  }, [externalActiveChat]);
 
   useEffect(() => {
     if (!currentUser?.uid) return;
@@ -18,8 +26,26 @@ export default function ChatScreen({ chats: initialChats, currentUser }) {
     return unsub;
   }, [currentUser?.uid]);
 
+  if (activeChat) {
+    return (
+      <ChatDetailScreen
+        chatId={activeChat.id}
+        partner={activeChat.partner}
+        currentUser={currentUser}
+        onBack={() => {
+          setActiveChat(null);
+          if (onClearActiveChat) onClearActiveChat();
+        }}
+      />
+    );
+  }
+
   const renderChatItem = ({ item }) => (
-    <TouchableOpacity style={styles.chatCard} activeOpacity={0.7}>
+    <TouchableOpacity 
+      onPress={() => setActiveChat(item)} 
+      style={styles.chatCard} 
+      activeOpacity={0.7}
+    >
       <View style={styles.avatarContainer}>
         <Image source={{ uri: item.partner.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' }} style={styles.avatar} />
         <View style={styles.onlineDot} />
