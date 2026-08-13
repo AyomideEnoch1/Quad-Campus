@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl, Alert, Share } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeFeedPosts, toggleLikePost, deletePost } from '../services/feedService';
+import { doc, updateDoc, increment } from 'firebase/firestore';
+import { db } from '../config/firebase';
 import CreatePostModal from '../components/CreatePostModal';
+import CommentsModal from '../components/CommentsModal';
 import { FeedCardSkeleton } from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
 
@@ -13,6 +16,7 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
+  const [activeCommentPost, setActiveCommentPost] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -48,6 +52,37 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
       await toggleLikePost(post.id, currentUser.uid, post.isLiked);
     } catch (e) {
       console.warn("Error toggling like:", e);
+    }
+  };
+
+  const handleRepost = async (post) => {
+    // Optimistic UI update
+    setPosts(prev => prev.map(p => {
+      if (p.id === post.id) {
+        return { ...p, repostsCount: (p.repostsCount || 0) + 1 };
+      }
+      return p;
+    }));
+
+    Alert.alert("Reposted!", "This post has been shared to your quad feed.");
+
+    try {
+      const postRef = doc(db, 'posts', post.id);
+      await updateDoc(postRef, {
+        repostsCount: increment(1)
+      });
+    } catch (err) {
+      console.error("Error reposting:", err);
+    }
+  };
+
+  const handleShare = async (post) => {
+    try {
+      await Share.share({
+        message: `Check out this post on QUAD campus app:\n\n"${post.content}" - by ${post.authorName} (${post.authorSchoolName})`,
+      });
+    } catch (err) {
+      console.error("Error sharing post:", err);
     }
   };
 
@@ -120,17 +155,17 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionBtn}>
+        <TouchableOpacity onPress={() => setActiveCommentPost(item)} style={styles.actionBtn}>
           <Feather name="message-circle" size={18} color={COLORS.textMuted} />
-          <Text style={styles.actionCount}>{item.commentsCount}</Text>
+          <Text style={styles.actionCount}>{item.commentsCount || 0}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionBtn}>
+        <TouchableOpacity onPress={() => handleRepost(item)} style={styles.actionBtn}>
           <Feather name="repeat" size={18} color={COLORS.textMuted} />
-          <Text style={styles.actionCount}>{item.repostsCount}</Text>
+          <Text style={styles.actionCount}>{item.repostsCount || 0}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionBtn}>
+        <TouchableOpacity onPress={() => handleShare(item)} style={styles.actionBtn}>
           <Feather name="share" size={18} color={COLORS.textMuted} />
         </TouchableOpacity>
       </View>
@@ -146,7 +181,7 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
           style={[styles.pillBtn, feedScope === 'my_school' && styles.pillActive]}
         >
           <Text style={[styles.pillText, feedScope === 'my_school' && styles.pillTextActive]}>
-            🏫 {currentSchool.shortName}
+            🏫 {currentSchool?.shortName || 'My School'}
           </Text>
         </TouchableOpacity>
 
@@ -198,6 +233,13 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
         onClose={() => setShowPostModal(false)}
         currentUser={currentUser}
         currentSchool={currentSchool}
+      />
+
+      <CommentsModal
+        visible={!!activeCommentPost}
+        onClose={() => setActiveCommentPost(null)}
+        post={activeCommentPost}
+        currentUser={currentUser}
       />
     </View>
   );
