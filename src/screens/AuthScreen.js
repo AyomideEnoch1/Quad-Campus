@@ -79,7 +79,15 @@ export default function AuthScreen({ onSignUp, onLogin }) {
       }
     } catch (err) {
       console.error("Auth error:", err);
-      Alert.alert("Authentication Error", err.message || "Failed to authenticate.");
+      let friendlyMessage = err.message || "Failed to authenticate.";
+
+      if (err.code === 'auth/email-already-in-use') {
+        friendlyMessage = "This email is already registered! Please switch to the 'Log in' tab above.";
+      } else if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+        friendlyMessage = "Incorrect email or password. Please check your credentials and try again.";
+      }
+
+      Alert.alert("Authentication Failed", friendlyMessage);
     } finally {
       setLoading(false);
     }

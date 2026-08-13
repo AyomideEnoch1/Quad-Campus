@@ -19,30 +19,29 @@ Notifications.setNotificationHandler({
 export async function registerForPushNotificationsAsync(userUid) {
   let token;
 
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'default',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#EF6F6C',
-    });
-  }
-
-  if (Device.isDevice) {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
+  try {
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#EF6F6C',
+      });
     }
 
-    if (finalStatus !== 'granted') {
-      console.log('Failed to get push token for push notification!');
-      return null;
-    }
+    if (Device.isDevice) {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
 
-    try {
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+
+      if (finalStatus !== 'granted') {
+        return null;
+      }
+
       token = (await Notifications.getExpoPushTokenAsync()).data;
       
       if (userUid && token) {
@@ -50,11 +49,10 @@ export async function registerForPushNotificationsAsync(userUid) {
           pushToken: token
         });
       }
-    } catch (error) {
-      console.warn('Error fetching Expo push token:', error);
     }
-  } else {
-    console.log('Push notifications require a physical device.');
+  } catch (error) {
+    // Expo Go SDK 54 removes native Android push remote listeners.
+    // Development/EAS builds handle native push notifications.
   }
 
   return token;
