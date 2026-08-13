@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeMarketplaceItems } from '../services/marketService';
@@ -18,7 +18,7 @@ export default function MarketScreen({ items: initialItems, currentUser, current
   const [selectedDetailItem, setSelectedDetailItem] = useState(null);
   const [selectedVendor, setSelectedVendor] = useState(null);
 
-  const categories = ['All', 'Textbooks', 'Tech', 'Dorm Gear', 'Tickets'];
+  const categories = ['All', 'Textbooks', 'Tech & Electronics', 'Dorm & Living', 'Fashion & Apparel', 'Tickets & Passes', 'Services & Tutoring'];
 
   useEffect(() => {
     setLoading(true);
@@ -83,19 +83,26 @@ export default function MarketScreen({ items: initialItems, currentUser, current
         />
       </View>
 
-      {/* Category Scroll */}
-      <View style={styles.categoryScroll}>
-        {categories.map(cat => (
-          <TouchableOpacity
-            key={cat}
-            onPress={() => setSelectedCategory(cat)}
-            style={[styles.catBtn, selectedCategory === cat && styles.catActive]}
-          >
-            <Text style={[styles.catText, selectedCategory === cat && styles.catTextActive]}>
-              {cat}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      {/* Category Horizontal Scroll */}
+      <View style={{ height: 44, marginVertical: 8 }}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          contentContainerStyle={styles.categoryScroll}
+        >
+          {categories.map(cat => (
+            <TouchableOpacity
+              key={cat}
+              onPress={() => setSelectedCategory(cat)}
+              style={[styles.catBtn, selectedCategory === cat && styles.catActive]}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.catText, selectedCategory === cat && styles.catTextActive]}>
+                {cat}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
       {/* 2-Column Listing Grid */}
@@ -184,8 +191,8 @@ const styles = StyleSheet.create({
   },
   categoryScroll: {
     flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 12,
-    paddingVertical: 10,
     gap: 8,
   },
   catBtn: {
