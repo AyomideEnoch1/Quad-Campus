@@ -6,6 +6,14 @@ import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import RoleBadge from './RoleBadge';
 
+const MOCK_USERS = [
+  { id: 'usr_1', displayName: 'Ayomide Enoch', username: 'ayomidenoch', role: 'super_admin', schoolName: 'UNILAG', avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' },
+  { id: 'usr_2', displayName: 'Jenny Wilson', username: 'jenny_wilson', role: 'student', schoolName: 'Harvard', avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&auto=format&fit=crop&q=80' },
+  { id: 'usr_3', displayName: 'Alex Rivera', username: 'arivera_mit', role: 'club_admin', schoolName: 'MIT', avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&auto=format&fit=crop&q=80' },
+  { id: 'usr_4', displayName: 'Tobi Adebayo', username: 'tobi_unilag', role: 'school_admin', schoolName: 'UNILAG', avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80' },
+  { id: 'usr_5', displayName: 'Chika Nwosu', username: 'chika_ui', role: 'advertiser', schoolName: 'UI', avatarUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&auto=format&fit=crop&q=80' }
+];
+
 export default function GlobalSearchModal({ 
   visible, 
   onClose, 
@@ -16,9 +24,15 @@ export default function GlobalSearchModal({
   onSelectListing
 }) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'posts' | 'market' | 'clubs'
+  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'users' | 'posts' | 'market' | 'clubs'
 
   const queryClean = searchQuery.trim().toLowerCase();
+
+  const filteredUsers = !queryClean ? [] : MOCK_USERS.filter(u =>
+    u.displayName?.toLowerCase().includes(queryClean) ||
+    u.username?.toLowerCase().includes(queryClean) ||
+    u.schoolName?.toLowerCase().includes(queryClean)
+  );
 
   const filteredPosts = !queryClean ? [] : posts.filter(p => 
     p.content?.toLowerCase().includes(queryClean) ||
@@ -50,7 +64,7 @@ export default function GlobalSearchModal({
             <Ionicons name="search-outline" size={18} color={COLORS.textMuted} />
             <TextInput
               style={styles.input}
-              placeholder="Search posts, market items, clubs..."
+              placeholder="Search students, posts, market, clubs..."
               placeholderTextColor={COLORS.textLight}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -68,6 +82,7 @@ export default function GlobalSearchModal({
         <View style={styles.tabRow}>
           {[
             { id: 'all', label: 'All Results' },
+            { id: 'users', label: `Users (${filteredUsers.length})` },
             { id: 'posts', label: `Posts (${filteredPosts.length})` },
             { id: 'market', label: `Market (${filteredItems.length})` },
             { id: 'clubs', label: `Clubs (${filteredClubs.length})` },
@@ -87,11 +102,12 @@ export default function GlobalSearchModal({
           <View style={styles.emptyState}>
             <Ionicons name="search" size={48} color={COLORS.textLight} />
             <Text style={styles.emptyTitle}>Search QUAD</Text>
-            <Text style={styles.emptySub}>Type a query to search across posts, campus products, and clubs.</Text>
+            <Text style={styles.emptySub}>Search students by name, campus posts, products, and student clubs.</Text>
           </View>
         ) : (
           <FlatList
             data={[
+              ...(activeTab === 'all' || activeTab === 'users' ? filteredUsers.map(u => ({ ...u, _type: 'user' })) : []),
               ...(activeTab === 'all' || activeTab === 'posts' ? filteredPosts.map(p => ({ ...p, _type: 'post' })) : []),
               ...(activeTab === 'all' || activeTab === 'market' ? filteredItems.map(i => ({ ...i, _type: 'item' })) : []),
               ...(activeTab === 'all' || activeTab === 'clubs' ? filteredClubs.map(c => ({ ...c, _type: 'club' })) : []),
@@ -99,6 +115,25 @@ export default function GlobalSearchModal({
             keyExtractor={(item, index) => `${item._type}_${item.id}_${index}`}
             contentContainerStyle={{ padding: 14, gap: 12 }}
             renderItem={({ item }) => {
+              if (item._type === 'user') {
+                return (
+                  <View style={styles.resultCard}>
+                    <View style={styles.cardHeader}>
+                      <Image source={{ uri: item.avatarUrl }} style={styles.avatar} />
+                      <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                          <Text style={styles.name}>{item.displayName}</Text>
+                          <RoleBadge role={item.role || 'student'} size={14} />
+                        </View>
+                        <Text style={styles.sub}>@{item.username} • {item.schoolName}</Text>
+                      </View>
+                      <View style={styles.badgePill}>
+                        <Text style={styles.badgeText}>User</Text>
+                      </View>
+                    </View>
+                  </View>
+                );
+              }
               if (item._type === 'post') {
                 return (
                   <View style={styles.resultCard}>

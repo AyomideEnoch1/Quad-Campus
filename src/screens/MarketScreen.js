@@ -55,10 +55,16 @@ export default function MarketScreen({ items: initialItems, currentUser, current
       <View style={styles.cardDetails}>
         <Text style={styles.itemTitle} numberOfLines={2}>{item.title}</Text>
         <View style={styles.cardFooter}>
+          <TouchableOpacity 
+            onPress={() => setSelectedVendor(item)}
+            style={styles.vendorStoreChip}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="storefront-outline" size={12} color={COLORS.primary} />
+            <Text style={styles.vendorStoreText}>{item.sellerName ? item.sellerName.split(' ')[0] : 'Store'}</Text>
+          </TouchableOpacity>
+
           <Text style={styles.sellerSchool}>🏫 {item.sellerSchoolName || currentSchool?.shortName}</Text>
-          {item.isVerifiedSeller && (
-            <Ionicons name="shield-checkmark" size={14} color={COLORS.badgeGreen} />
-          )}
         </View>
       </View>
     </TouchableOpacity>
@@ -264,6 +270,20 @@ const styles = StyleSheet.create({
   sellerSchool: {
     fontSize: 11,
     color: COLORS.textMuted,
+  },
+  vendorStoreChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: COLORS.primaryLight,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.full,
+  },
+  vendorStoreText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: COLORS.primary,
   },
   fabBtn: {
     position: 'absolute',

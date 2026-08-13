@@ -7,6 +7,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { toggleJoinClub, subscribeClubMessages, sendClubMessage } from '../services/clubService';
+import RoleBadge from './RoleBadge';
+import { pickAndUploadImage } from '../utils/uploadImage';
 
 export default function ClubDetailModal({ visible, onClose, club, currentUser, onToggleJoin }) {
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'chat'
@@ -46,6 +48,24 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
     }
   };
 
+  const handleAttachMedia = async () => {
+    try {
+      const url = await pickAndUploadImage('club_chats');
+      if (url) {
+        await sendClubMessage(club.id, {
+          senderId: currentUser.uid,
+          senderName: currentUser.displayName || 'Student',
+          senderAvatar: currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
+          senderRole: currentUser.role || 'student',
+          mediaUrl: url,
+          text: ''
+        });
+      }
+    } catch (e) {
+      console.warn("Error uploading chat media:", e);
+    }
+  };
+
   const renderMessage = ({ item }) => {
     const isMe = item.senderId === currentUser?.uid;
     return (
@@ -57,9 +77,22 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
           />
         )}
         <View style={[styles.msgBubble, isMe ? styles.msgBubbleMe : styles.msgBubbleOther]}>
-          {!isMe && <Text style={styles.msgSender}>{item.senderName}</Text>}
-          <Text style={[styles.msgText, isMe && styles.msgTextMe]}>{item.text}</Text>
-          <Text style={[styles.msgTime, isMe && styles.msgTimeMe]}>{item.time}</Text>
+          {!isMe && (
+            <View style={styles.msgSenderHeader}>
+              <Text style={styles.msgSender}>{item.senderName}</Text>
+              <RoleBadge role={item.senderRole || 'student'} size={12} />
+            </View>
+          )}
+          {item.mediaUrl && (
+            <Image source={{ uri: item.mediaUrl }} style={styles.msgMedia} resizeMode="cover" />
+          )}
+          {!!item.text && (
+            <Text style={[styles.msgText, isMe && styles.msgTextMe]}>{item.text}</Text>
+          )}
+          <View style={styles.msgTimeRow}>
+            <Text style={[styles.msgTime, isMe && styles.msgTimeMe]}>{item.time || 'Just now'}</Text>
+            {isMe && <Ionicons name="checkmark-done" size={12} color="rgba(255,255,255,0.9)" />}
+          </View>
         </View>
       </View>
     );
@@ -134,6 +167,9 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
 
             {/* Input Bar */}
             <View style={styles.inputBar}>
+              <TouchableOpacity onPress={handleAttachMedia} style={styles.attachBtn} activeOpacity={0.7}>
+                <Ionicons name="add" size={20} color={COLORS.primary} />
+              </TouchableOpacity>
               <TextInput
                 style={styles.input}
                 placeholder={`Message ${club.name}...`}
@@ -514,5 +550,67 @@ const styles = StyleSheet.create({
   },
   sendBtnDisabled: {
     backgroundColor: COLORS.textLight,
+  },
+  fullChatHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: COLORS.bgCard,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.borderColor,
+    gap: 10,
+  },
+  chatHeaderAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: COLORS.primary,
+  },
+  chatHeaderTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: COLORS.textMain,
+  },
+  chatHeaderSub: {
+    fontSize: 11,
+    color: COLORS.badgeGreen,
+    fontWeight: '600',
+  },
+  closeChatBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: COLORS.bgInput,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  msgSenderHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+  },
+  msgMedia: {
+    width: 200,
+    height: 140,
+    borderRadius: RADIUS.md,
+    marginVertical: 4,
+  },
+  msgTimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 3,
+    marginTop: 2,
+  },
+  attachBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
   }
 });
