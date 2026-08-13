@@ -22,30 +22,31 @@ export function subscribeMarketplaceItems(category, callback) {
     q = query(
       collection(db, 'marketplace_items'),
       where('category', '==', category),
-      where('status', '==', 'available'),
-      orderBy('createdAt', 'desc'),
       limit(50)
     );
   } else {
     q = query(
       collection(db, 'marketplace_items'),
-      where('status', '==', 'available'),
-      orderBy('createdAt', 'desc'),
       limit(50)
     );
   }
 
   return onSnapshot(q, (snapshot) => {
-    const items = snapshot.docs.map(d => ({
-      id: d.id,
-      ...d.data(),
-      createdAt: d.data().createdAt?.toDate
-        ? formatTimeAgo(d.data().createdAt.toDate())
-        : 'Just now'
-    }));
+    const items = snapshot.docs
+      .map(d => ({
+        id: d.id,
+        ...d.data(),
+        createdAt: d.data().createdAt?.toDate
+          ? formatTimeAgo(d.data().createdAt.toDate())
+          : 'Just now',
+        _rawDate: d.data().createdAt?.toDate ? d.data().createdAt.toDate() : new Date()
+      }))
+      .filter(item => item.status !== 'sold')
+      .sort((a, b) => b._rawDate - a._rawDate);
+
     callback(items);
   }, (err) => {
-    console.error("Marketplace subscription error:", err);
+    console.warn("Marketplace subscription notice:", err?.message || err);
   });
 }
 
