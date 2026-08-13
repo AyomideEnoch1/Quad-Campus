@@ -14,6 +14,7 @@ import SplashScreen from './src/screens/SplashScreen';
 import AuthScreen from './src/screens/AuthScreen';
 import InterestsScreen from './src/screens/InterestsScreen';
 import SetupProfileScreen from './src/screens/SetupProfileScreen';
+import { registerForPushNotificationsAsync } from './src/utils/notifications';
 
 // Main app screens
 import Navbar from './src/components/Navbar';
@@ -173,6 +174,7 @@ export default function App() {
               likesReceived: data.likesReceived || 0,
             };
             setCurrentUser(userProfile);
+            registerForPushNotificationsAsync(user.uid);
 
             const schoolObj = SCHOOLS.find(s => s.id === data.schoolId);
             if (schoolObj) setCurrentSchool(schoolObj);
