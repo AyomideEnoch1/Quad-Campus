@@ -151,16 +151,25 @@ export default function App() {
           const userDoc = await getDoc(doc(db, 'users', user.uid));
           if (userDoc.exists()) {
             const data = userDoc.data();
-            setCurrentUser({
-              ...CURRENT_USER,
+            const userProfile = {
               uid: user.uid,
               email: user.email,
-              displayName: data.displayName || user.email.split('@')[0],
-              username: data.username || user.email.split('@')[0].toLowerCase(),
+              displayName: data.displayName || user.email?.split('@')[0] || 'Student',
+              username: data.username || user.email?.split('@')[0].toLowerCase() || 'student',
               schoolId: data.schoolId || SCHOOLS[0].id,
               schoolName: data.schoolName || SCHOOLS[0].name,
               isVerifiedSchool: !!data.isVerifiedSchool,
-            });
+              bio: data.bio || `Student @ ${data.schoolName || 'University'}`,
+              major: data.major || 'General Studies',
+              gradYear: data.gradYear || 2026,
+              avatarUrl: data.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
+              bannerUrl: data.bannerUrl || 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop&q=80',
+              followersCount: data.followersCount || 0,
+              followingCount: data.followingCount || 0,
+              likesReceived: data.likesReceived || 0,
+            };
+            setCurrentUser(userProfile);
+
             const schoolObj = SCHOOLS.find(s => s.id === data.schoolId);
             if (schoolObj) setCurrentSchool(schoolObj);
           }
@@ -185,8 +194,26 @@ export default function App() {
   if (flow === 'auth') {
     return (
       <AuthScreen
-        onSignUp={({ selectedSchool }) => {
+        onSignUp={({ selectedSchool, user, email }) => {
           if (selectedSchool) setCurrentSchool(selectedSchool);
+          const handle = email ? email.split('@')[0] : 'student';
+          setCurrentUser({
+            uid: user?.uid || 'usr_new',
+            email: email || '',
+            displayName: handle,
+            username: handle.toLowerCase(),
+            schoolId: selectedSchool?.id || SCHOOLS[0].id,
+            schoolName: selectedSchool?.name || SCHOOLS[0].name,
+            isVerifiedSchool: false,
+            bio: `Student @ ${selectedSchool?.name || 'University'}`,
+            major: 'General Studies',
+            gradYear: 2026,
+            avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
+            bannerUrl: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop&q=80',
+            followersCount: 0,
+            followingCount: 0,
+            likesReceived: 0,
+          });
           setFlow('interests');
         }}
         onLogin={() => setFlow('main')}
