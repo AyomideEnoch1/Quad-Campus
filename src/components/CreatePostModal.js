@@ -12,38 +12,43 @@ import { uploadImage } from '../utils/uploadImage';
 export default function CreatePostModal({ visible, onClose, currentUser, currentSchool }) {
   const [content, setContent] = useState('');
   const [scope, setScope] = useState('my_school'); // 'my_school' | 'all_schools'
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState(null); // { uri, type: 'image' | 'video' }
 
-  const pickImage = async () => {
+  const pickMedia = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
-      Alert.alert('Permission Denied', 'Permission to access camera roll is required!');
+      Alert.alert('Permission Denied', 'Permission to access photo and video gallery is required!');
       return;
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ['images', 'videos'],
       quality: 0.8,
       allowsEditing: true,
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
-      setSelectedImage(result.assets[0].uri);
+      const asset = result.assets[0];
+      setSelectedMedia({
+        uri: asset.uri,
+        type: asset.type === 'video' ? 'video' : 'image'
+      });
     }
   };
 
+  const [submitting, setSubmitting] = useState(false);
+
   const handleSubmit = async () => {
-    if (!content.trim() && !selectedImage) {
-      Alert.alert('Empty Post', 'Please enter some text or select an image.');
+    if (!content.trim() && !selectedMedia) {
+      Alert.alert('Empty Post', 'Please enter text or select a photo/video.');
       return;
     }
 
     setSubmitting(true);
     try {
       let uploadedMediaUrl = null;
-      if (selectedImage) {
-        uploadedMediaUrl = await uploadImage(selectedImage, 'posts');
+      if (selectedMedia) {
+        uploadedMediaUrl = await uploadImage(selectedMedia.uri, 'posts', selectedMedia.type);
       }
 
       await createPost({
@@ -56,11 +61,12 @@ export default function CreatePostModal({ visible, onClose, currentUser, current
         isVerifiedAuthor: !!currentUser.isVerifiedSchool,
         content: content.trim(),
         mediaUrls: uploadedMediaUrl ? [uploadedMediaUrl] : [],
+        mediaType: selectedMedia ? selectedMedia.type : null,
         scope
       });
 
       setContent('');
-      setSelectedImage(null);
+      setSelectedMedia(null);
       onClose();
     } catch (err) {
       console.error("Error creating post:", err);
@@ -85,10 +91,10 @@ export default function CreatePostModal({ visible, onClose, currentUser, current
             <Text style={styles.title}>Create Post</Text>
             <TouchableOpacity 
               onPress={handleSubmit} 
-              disabled={submitting || (!content.trim() && !selectedImage)}
+              disabled={submitting || (!content.trim() && !selectedMedia)}
               style={[
                 styles.postBtn, 
-                (submitting || (!content.trim() && !selectedImage)) && styles.postBtnDisabled
+                (submitting || (!content.trim() && !selectedMedia)) && styles.postBtnDisabled
               ]}
             >
               {submitting ? (
@@ -131,12 +137,20 @@ export default function CreatePostModal({ visible, onClose, currentUser, current
             autoFocus
           />
 
-          {/* Image Preview */}
-          {selectedImage && (
+          {/* Media Preview */}
+          {selectedMedia && (
             <View style={styles.imagePreviewContainer}>
-              <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
+              {selectedMedia.type === 'video' ? (
+                <View style={styles.videoBadgePreview}>
+                  <Ionicons name="videocam" size={28} color={COLORS.primary} />
+                  <Text style={styles.videoBadgeText}>Video Selected</Text>
+                </View>
+              ) : (
+                <Image source={{ uri: selectedMedia.uri }} style={styles.imagePreview} />
+              )}
+
               <TouchableOpacity 
-                onPress={() => setSelectedImage(null)} 
+                onPress={() => setSelectedMedia(null)} 
                 style={styles.removeImgBtn}
               >
                 <Ionicons name="close-circle" size={24} color={COLORS.primary} />
@@ -146,9 +160,9 @@ export default function CreatePostModal({ visible, onClose, currentUser, current
 
           {/* Action Toolbar */}
           <View style={styles.toolbar}>
-            <TouchableOpacity onPress={pickImage} style={styles.toolBtn}>
-              <Ionicons name="image-outline" size={22} color={COLORS.primary} />
-              <Text style={styles.toolText}>Photo</Text>
+            <TouchableOpacity onPress={pickMedia} style={styles.toolBtn}>
+              <Ionicons name="images-outline" size={22} color={COLORS.primary} />
+              <Text style={styles.toolText}>Photo / Video</Text>
             </TouchableOpacity>
           </View>
         </View>

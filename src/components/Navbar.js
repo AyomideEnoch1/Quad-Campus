@@ -17,7 +17,7 @@ export default function Navbar({
       <View style={styles.container}>
         {/* Logo & Campus Button */}
         <View style={styles.leftSection}>
-          <QuadLogo height={24} />
+          <QuadLogo height={24} showText={false} />
 
           <TouchableOpacity 
             onPress={onOpenSchoolPicker} 
@@ -25,7 +25,7 @@ export default function Navbar({
             activeOpacity={0.7}
           >
             <Ionicons name="school-outline" size={14} color={COLORS.primary} />
-            <Text style={styles.schoolText}>{currentSchool.shortName}</Text>
+            <Text style={styles.schoolText} numberOfLines={1}>{currentSchool.shortName}</Text>
             <Feather name="chevron-down" size={14} color={COLORS.textMuted} />
           </TouchableOpacity>
 
