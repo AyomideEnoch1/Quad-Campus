@@ -8,8 +8,13 @@ import Svg, { Circle, Line as SvgLine } from 'react-native-svg';
 import { BRAND } from '../constants/theme';
 import { SCHOOLS } from '../data/mockData';
 import { auth, db } from '../config/firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithCredential
+} from 'firebase/auth';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 
 function QMark({ size = 38 }) {
   const sw = size * 0.16;
@@ -179,6 +184,28 @@ export default function AuthScreen({ onSignUp, onLogin }) {
                 {mode === 'signup' ? 'Create account' : 'Log in'}
               </Text>
             )}
+          </TouchableOpacity>
+
+          {/* Or Divider */}
+          <View style={styles.dividerRow}>
+            <View style={styles.line} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.line} />
+          </View>
+
+          {/* Google Sign In Button */}
+          <TouchableOpacity
+            onPress={() => {
+              Alert.alert(
+                "Google Sign-In",
+                "Ensure Google provider is enabled in Firebase Console (Authentication -> Sign-in method -> Google)."
+              );
+            }}
+            style={styles.googleBtn}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="logo-google" size={18} color="#EA4335" />
+            <Text style={styles.googleBtnText}>Continue with Google</Text>
           </TouchableOpacity>
 
           <Text style={styles.switchText}>
@@ -374,6 +401,40 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '800',
     fontSize: 14,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    marginVertical: 4,
+    gap: 8,
+  },
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: BRAND.LINE,
+  },
+  dividerText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: BRAND.SLATE,
+  },
+  googleBtn: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: '#fff',
+    borderWidth: 1.5,
+    borderColor: BRAND.LINE,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  googleBtnText: {
+    color: BRAND.INK,
+    fontWeight: '700',
+    fontSize: 13,
   },
   switchText: {
     fontSize: 12,
