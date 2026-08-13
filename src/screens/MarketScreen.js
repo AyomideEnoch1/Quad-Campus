@@ -1,18 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, TextInput } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
+import { subscribeMarketplaceItems } from '../services/marketService';
 
-export default function MarketScreen({ items, setItems, currentUser, onStartChatWithSeller }) {
+export default function MarketScreen({ items: initialItems, currentUser, onStartChatWithSeller }) {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [items, setItems] = useState(initialItems || []);
 
   const categories = ['All', 'Textbooks', 'Tech', 'Dorm Gear', 'Tickets'];
 
+  useEffect(() => {
+    const unsub = subscribeMarketplaceItems(selectedCategory, (liveItems) => {
+      if (liveItems && liveItems.length > 0) {
+        setItems(liveItems);
+      }
+    });
+    return unsub;
+  }, [selectedCategory]);
+
   const filteredItems = items.filter(item => {
-    const matchesCat = selectedCategory === 'All' || item.category === selectedCategory;
     const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCat && matchesSearch;
+    return matchesSearch;
   });
 
   const renderItemCard = ({ item }) => (

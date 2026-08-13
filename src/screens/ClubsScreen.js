@@ -1,17 +1,38 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
+import { subscribeClubs, toggleJoinClub } from '../services/clubService';
 
-export default function ClubsScreen({ clubs, setClubs }) {
-  const toggleJoin = (clubId) => {
-    setClubs(clubs.map(c => {
-      if (c.id === clubId) {
+export default function ClubsScreen({ clubs: initialClubs, currentUser, currentSchool }) {
+  const [clubs, setClubs] = useState(initialClubs || []);
+
+  useEffect(() => {
+    const unsub = subscribeClubs(currentSchool?.id, currentUser?.uid, (liveClubs) => {
+      if (liveClubs && liveClubs.length > 0) {
+        setClubs(liveClubs);
+      }
+    });
+    return unsub;
+  }, [currentSchool?.id, currentUser?.uid]);
+
+  const toggleJoin = async (club) => {
+    // Optimistic UI update
+    setClubs(prev => prev.map(c => {
+      if (c.id === club.id) {
         const isJoined = !c.isJoined;
         return { ...c, isJoined, memberCount: isJoined ? c.memberCount + 1 : c.memberCount - 1 };
       }
       return c;
     }));
+
+    try {
+      if (currentUser?.uid) {
+        await toggleJoinClub(club.id, currentUser.uid, club.isJoined);
+      }
+    } catch (e) {
+      console.warn("Error toggling club membership:", e);
+    }
   };
 
   const renderClub = ({ item }) => (
@@ -26,7 +47,7 @@ export default function ClubsScreen({ clubs, setClubs }) {
         </View>
 
         <TouchableOpacity 
-          onPress={() => toggleJoin(item.id)}
+          onPress={() => toggleJoin(item)}
           style={[styles.joinBtn, item.isJoined && styles.joinedBtn]}
         >
           <Text style={[styles.joinText, item.isJoined && styles.joinedText]}>

@@ -117,7 +117,7 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser 
 
         <Tab.Screen name="Clubs">
           {props => (
-            <ClubsScreen {...props} clubs={clubs} setClubs={setClubs} />
+            <ClubsScreen {...props} clubs={clubs} setClubs={setClubs} currentUser={currentUser} currentSchool={currentSchool} />
           )}
         </Tab.Screen>
 

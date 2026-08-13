@@ -1,13 +1,26 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
+import { subscribeUserChats } from '../services/chatService';
 
-export default function ChatScreen({ chats, currentUser }) {
+export default function ChatScreen({ chats: initialChats, currentUser }) {
+  const [chats, setChats] = useState(initialChats || []);
+
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    const unsub = subscribeUserChats(currentUser.uid, (liveChats) => {
+      if (liveChats && liveChats.length > 0) {
+        setChats(liveChats);
+      }
+    });
+    return unsub;
+  }, [currentUser?.uid]);
+
   const renderChatItem = ({ item }) => (
     <TouchableOpacity style={styles.chatCard} activeOpacity={0.7}>
       <View style={styles.avatarContainer}>
-        <Image source={{ uri: item.partner.avatarUrl }} style={styles.avatar} />
+        <Image source={{ uri: item.partner.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' }} style={styles.avatar} />
         <View style={styles.onlineDot} />
       </View>
 

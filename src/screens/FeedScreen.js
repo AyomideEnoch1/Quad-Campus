@@ -1,32 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
+import { subscribeFeedPosts, toggleLikePost } from '../services/feedService';
 
-export default function FeedScreen({ posts, setPosts, currentSchool, currentUser, onOpenPostModal }) {
+export default function FeedScreen({ posts: initialPosts, currentSchool, currentUser, onOpenPostModal }) {
   const [feedScope, setFeedScope] = useState('my_school'); // 'my_school' | 'all_schools'
+  const [posts, setPosts] = useState(initialPosts || []);
   const [refreshing, setRefreshing] = useState(false);
 
-  const filteredPosts = posts.filter(post => {
-    if (feedScope === 'my_school') {
-      return post.authorSchoolId === currentSchool.id;
-    }
-    return true;
-  });
+  useEffect(() => {
+    const schoolIdFilter = feedScope === 'my_school' ? currentSchool.id : null;
+    const unsub = subscribeFeedPosts(schoolIdFilter, (livePosts) => {
+      if (livePosts && livePosts.length > 0) {
+        setPosts(livePosts.map(p => ({
+          ...p,
+          isLiked: p.likedBy?.includes(currentUser?.uid)
+        })));
+      }
+    });
+    return unsub;
+  }, [feedScope, currentSchool.id, currentUser?.uid]);
 
   const onRefresh = () => {
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 1000);
   };
 
-  const handleLike = (postId) => {
-    setPosts(posts.map(p => {
-      if (p.id === postId) {
+  const handleLike = async (post) => {
+    // Optimistic UI update
+    setPosts(prev => prev.map(p => {
+      if (p.id === post.id) {
         const isLiked = !p.isLiked;
         return { ...p, isLiked, likesCount: isLiked ? p.likesCount + 1 : p.likesCount - 1 };
       }
       return p;
     }));
+
+    try {
+      await toggleLikePost(post.id, currentUser.uid, post.isLiked);
+    } catch (e) {
+      console.warn("Error toggling like:", e);
+    }
   };
 
   const renderPost = ({ item }) => (
@@ -59,7 +74,7 @@ export default function FeedScreen({ posts, setPosts, currentSchool, currentUser
 
       {/* Action Bar */}
       <View style={styles.actionBar}>
-        <TouchableOpacity onPress={() => handleLike(item.id)} style={styles.actionBtn}>
+        <TouchableOpacity onPress={() => handleLike(item)} style={styles.actionBtn}>
           <Ionicons 
             name={item.isLiked ? "heart" : "heart-outline"} 
             size={20} 
@@ -112,7 +127,7 @@ export default function FeedScreen({ posts, setPosts, currentSchool, currentUser
 
       {/* Feed List */}
       <FlatList
-        data={filteredPosts}
+        data={posts}
         keyExtractor={item => item.id}
         renderItem={renderPost}
         contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 24, gap: 12 }}
