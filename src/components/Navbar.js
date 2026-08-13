@@ -24,7 +24,8 @@ export default function Navbar({
             style={styles.schoolPill}
             activeOpacity={0.7}
           >
-            <Text style={styles.schoolText}>🏫 {currentSchool.shortName}</Text>
+            <Ionicons name="school-outline" size={14} color={COLORS.primary} />
+            <Text style={styles.schoolText}>{currentSchool.shortName}</Text>
             <Feather name="chevron-down" size={14} color={COLORS.textMuted} />
           </TouchableOpacity>
 

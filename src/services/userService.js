@@ -1,9 +1,10 @@
-import { db } from '../config/firebase';
+import { db, auth } from '../config/firebase';
 import {
   doc,
   getDoc,
   setDoc,
   updateDoc,
+  deleteDoc,
   collection,
   query,
   where,
@@ -12,6 +13,7 @@ import {
   increment,
   writeBatch
 } from 'firebase/firestore';
+import { deleteUser } from 'firebase/auth';
 
 /**
  * Fetch a single user profile doc by UID
@@ -82,4 +84,18 @@ export async function searchUsers(searchTerm) {
   
   const snap = await getDocs(q);
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+/**
+ * Permanently delete user profile document and auth user account
+ */
+export async function deleteUserAccount(uid) {
+  if (!uid) return;
+  // 1. Delete Firestore profile document
+  await deleteDoc(doc(db, 'users', uid));
+
+  // 2. Delete Firebase Auth user
+  if (auth.currentUser) {
+    await deleteUser(auth.currentUser);
+  }
 }

@@ -1,7 +1,8 @@
 import React from 'react';
 import {
-  Modal, View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert
+  Modal, View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, Platform
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { markItemSold, deleteListing } from '../services/marketService';
@@ -44,67 +45,78 @@ export default function ItemDetailModal({ visible, onClose, item, currentUser, o
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={styles.modalCard}>
-          {/* Header Image with Close Button */}
-          <View style={styles.imageContainer}>
+    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
+      <SafeAreaView style={styles.container}>
+        {/* Top Navigation Header */}
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={onClose} style={styles.backBtn} activeOpacity={0.7}>
+            <Ionicons name="arrow-back" size={24} color={COLORS.textMain} />
+          </TouchableOpacity>
+          <Text style={styles.topTitle} numberOfLines={1}>{item.title}</Text>
+          <View style={{ width: 36 }} />
+        </View>
+
+        {/* Scrollable Content (Includes Hero Image, Details, and Action Button) */}
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          {/* Large Hero Image */}
+          <View style={styles.heroImageContainer}>
             <Image 
               source={{ uri: item.imageUrl || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&auto=format&fit=crop&q=80' }} 
-              style={styles.productImage} 
+              style={styles.heroImage} 
             />
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color="#fff" />
-            </TouchableOpacity>
+            <View style={styles.conditionBadge}>
+              <Text style={styles.conditionText}>{item.condition}</Text>
+            </View>
           </View>
 
-          <ScrollView contentContainerStyle={styles.bodyContent}>
-            {/* Title & Price */}
-            <View style={styles.titleRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.title}>{item.title}</Text>
-                <Text style={styles.category}>{item.category} • {item.condition}</Text>
-              </View>
-              <Text style={styles.price}>₦{typeof item.price === 'number' ? item.price.toLocaleString() : item.price}</Text>
+          {/* Title & Price Header */}
+          <View style={styles.headerSection}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.title}>{item.title}</Text>
+              <Text style={styles.category}>{item.category}</Text>
             </View>
+            <Text style={styles.price}>₦{typeof item.price === 'number' ? item.price.toLocaleString() : item.price}</Text>
+          </View>
 
-            {/* Seller Info */}
-            <View style={styles.sellerCard}>
-              <Image 
-                source={{ uri: item.sellerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' }} 
-                style={styles.sellerAvatar} 
-              />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.sellerName}>{item.sellerName}</Text>
+          {/* Seller Card */}
+          <View style={styles.sellerCard}>
+            <Image 
+              source={{ uri: item.sellerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' }} 
+              style={styles.sellerAvatar} 
+            />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sellerName}>{item.sellerName}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                <Ionicons name="school-outline" size={12} color={COLORS.primary} />
                 <Text style={styles.sellerSchool}>{item.sellerSchoolName || 'Campus Seller'}</Text>
               </View>
-              {item.location && (
-                <View style={styles.locationTag}>
-                  <Ionicons name="location-outline" size={14} color={COLORS.primary} />
-                  <Text style={styles.locationText}>{item.location}</Text>
-                </View>
-              )}
             </View>
+            {item.location && (
+              <View style={styles.locationTag}>
+                <Ionicons name="location-outline" size={14} color={COLORS.primary} />
+                <Text style={styles.locationText}>{item.location}</Text>
+              </View>
+            )}
+          </View>
 
-            {/* Description */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Description</Text>
-              <Text style={styles.description}>
-                {item.description || "No description provided for this item."}
-              </Text>
-            </View>
-          </ScrollView>
+          {/* Item Description */}
+          <View style={styles.descriptionSection}>
+            <Text style={styles.sectionTitle}>Item Overview</Text>
+            <Text style={styles.descriptionText}>
+              {item.description || "No detailed description provided by seller for this item."}
+            </Text>
+          </View>
 
-          {/* Action Footer */}
-          <View style={styles.footer}>
+          {/* Action Buttons (Inside ScrollView so never cut off) */}
+          <View style={styles.actionContainer}>
             {isSeller ? (
-              <View style={{ flexDirection: 'row', gap: 10, flex: 1 }}>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
                 <TouchableOpacity onPress={handleMarkSold} style={[styles.ctaBtn, { backgroundColor: COLORS.badgeGreen, flex: 1 }]}>
-                  <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
-                  <Text style={styles.ctaText}>Mark Sold</Text>
+                  <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+                  <Text style={styles.ctaText}>Mark as Sold</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={handleDelete} style={[styles.ctaBtn, { backgroundColor: '#EF4444', width: 48 }]}>
-                  <Ionicons name="trash-outline" size={18} color="#fff" />
+                <TouchableOpacity onPress={handleDelete} style={[styles.ctaBtn, { backgroundColor: '#EF4444', width: 52 }]}>
+                  <Ionicons name="trash-outline" size={20} color="#fff" />
                 </TouchableOpacity>
               </View>
             ) : (
@@ -114,141 +126,180 @@ export default function ItemDetailModal({ visible, onClose, item, currentUser, o
                   if (onStartChat) onStartChat(item.sellerName, item);
                 }} 
                 style={styles.ctaBtn}
+                activeOpacity={0.85}
               >
-                <Feather name="message-square" size={18} color="#fff" />
+                <Feather name="message-square" size={20} color="#fff" />
                 <Text style={styles.ctaText}>Message Seller</Text>
               </TouchableOpacity>
             )}
           </View>
-        </View>
-      </View>
+        </ScrollView>
+      </SafeAreaView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
+  container: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    justifyContent: 'flex-end',
+    backgroundColor: COLORS.bgMain,
   },
-  modalCard: {
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.borderColor,
     backgroundColor: COLORS.bgCard,
-    borderTopLeftRadius: RADIUS.xl,
-    borderTopRightRadius: RADIUS.xl,
-    maxHeight: '85%',
-    overflow: 'hidden',
   },
-  imageContainer: {
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.bgInput,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: COLORS.textMain,
+    flex: 1,
+    textAlign: 'center',
+    marginHorizontal: 8,
+  },
+  scrollContent: {
+    padding: 16,
+    gap: 16,
+    paddingBottom: 40,
+  },
+  heroImageContainer: {
     position: 'relative',
     width: '100%',
-    height: 220,
-    backgroundColor: '#000',
+    height: 260,
+    borderRadius: RADIUS.xl,
+    overflow: 'hidden',
+    backgroundColor: COLORS.bgCard,
+    borderWidth: 1,
+    borderColor: COLORS.borderColor,
   },
-  productImage: {
+  heroImage: {
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
   },
-  closeBtn: {
+  conditionBadge: {
     position: 'absolute',
-    top: 14,
-    right: 14,
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    bottom: 12,
+    left: 12,
+    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: RADIUS.full,
   },
-  bodyContent: {
-    padding: 16,
-    gap: 16,
+  conditionText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
   },
-  titleRow: {
+  headerSection: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    gap: 12,
+    backgroundColor: COLORS.bgCard,
+    padding: 16,
+    borderRadius: RADIUS.xl,
+    borderWidth: 1,
+    borderColor: COLORS.borderColor,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 20,
+    fontWeight: '900',
     color: COLORS.textMain,
   },
   category: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.textMuted,
-    marginTop: 2,
+    marginTop: 4,
   },
   price: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '900',
     color: COLORS.primary,
   },
   sellerCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.bgInput,
-    padding: 12,
-    borderRadius: RADIUS.lg,
-    gap: 10,
+    backgroundColor: COLORS.bgCard,
+    padding: 14,
+    borderRadius: RADIUS.xl,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: COLORS.borderColor,
   },
   sellerAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
   sellerName: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '800',
     color: COLORS.textMain,
   },
   sellerSchool: {
-    fontSize: 11,
+    fontSize: 12,
     color: COLORS.textMuted,
   },
   locationTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
+    gap: 3,
+    backgroundColor: COLORS.primaryLight,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: RADIUS.full,
   },
   locationText: {
     fontSize: 11,
     color: COLORS.primary,
-    fontWeight: '600',
+    fontWeight: '700',
   },
-  section: {
-    gap: 6,
+  descriptionSection: {
+    backgroundColor: COLORS.bgCard,
+    padding: 16,
+    borderRadius: RADIUS.xl,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: COLORS.borderColor,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '800',
     color: COLORS.textMain,
   },
-  description: {
-    fontSize: 13,
-    lineHeight: 19,
+  descriptionText: {
+    fontSize: 14,
+    lineHeight: 22,
     color: COLORS.textMuted,
   },
-  footer: {
-    padding: 14,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.borderColor,
-    backgroundColor: COLORS.bgCard,
+  actionContainer: {
+    marginTop: 8,
   },
   ctaBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: COLORS.primary,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderRadius: RADIUS.full,
     gap: 8,
   },
   ctaText: {
     color: '#fff',
     fontWeight: '800',
-    fontSize: 14,
+    fontSize: 15,
   }
 });

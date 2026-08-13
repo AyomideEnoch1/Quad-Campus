@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { Feather, Ionicons } from '@expo/vector-icons';
+import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { auth } from '../config/firebase';
 import { signOut } from 'firebase/auth';
+import { deleteUserAccount } from '../services/userService';
 import EditProfileModal from '../components/EditProfileModal';
 
 export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerification, onSignOut }) {
@@ -24,6 +25,29 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
               if (onSignOut) onSignOut();
             } catch (err) {
               console.error("Error signing out:", err);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Delete Account",
+      "Are you sure you want to delete your account? This action is permanent and will delete your profile document.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete Permanently",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteUserAccount(currentUser.uid);
+              if (onSignOut) onSignOut();
+            } catch (err) {
+              console.error("Error deleting account:", err);
+              Alert.alert("Error", err.message || "Failed to delete account.");
             }
           }
         }
@@ -52,7 +76,8 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
         <Text style={styles.username}>@{currentUser.username}</Text>
 
         <View style={styles.schoolPill}>
-          <Text style={styles.schoolText}>🏫 {currentUser.schoolName} • {currentUser.gradYear || 2026}</Text>
+          <Ionicons name="school-outline" size={14} color={COLORS.primary} style={{ marginRight: 4 }} />
+          <Text style={styles.schoolText}>{currentUser.schoolName} • {currentUser.gradYear || 2026}</Text>
         </View>
 
         <Text style={styles.bio}>{currentUser.bio || 'Student @ ' + currentUser.schoolName}</Text>
@@ -97,6 +122,10 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
 
           <TouchableOpacity onPress={handleSignOut} style={styles.signOutBtn}>
             <Feather name="log-out" size={14} color={COLORS.primary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={handleDeleteAccount} style={[styles.signOutBtn, { backgroundColor: '#FEE2E2', borderColor: '#FCA5A5' }]}>
+            <Ionicons name="trash-outline" size={14} color="#EF4444" />
           </TouchableOpacity>
         </View>
       </View>
