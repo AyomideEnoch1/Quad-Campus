@@ -211,6 +211,7 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
       </View>
     </View>
   );
+};
 
   return (
     <View style={styles.container}>
