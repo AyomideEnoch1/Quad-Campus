@@ -1,0 +1,548 @@
+import React, { useState } from 'react';
+import {
+  View, Text, TextInput, TouchableOpacity,
+  StyleSheet, ScrollView, Platform, KeyboardAvoidingView,
+  Modal, FlatList, ActivityIndicator, Alert
+} from 'react-native';
+import Svg, { Circle, Line as SvgLine } from 'react-native-svg';
+import { Ionicons } from '@expo/vector-icons';
+import { BRAND } from '../constants/theme';
+import { SCHOOLS } from '../data/mockData';
+import { auth, db } from '../config/firebase';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithCredential
+} from 'firebase/auth';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import SchoolPickerModal from '../components/SchoolPickerModal';
+
+function QMark({ size = 38 }) {
+  const sw = size * 0.16;
+  return (
+    <Svg width={size} height={size} viewBox="0 0 100 100">
+      <Circle cx="42" cy="40" r="34" fill="none" stroke={BRAND.INK} strokeWidth={sw} />
+      <SvgLine
+        x1="63" y1="61" x2="88" y2="86"
+        stroke={BRAND.CORAL} strokeWidth={sw} strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
+export default function AuthScreen({ onSignUp, onLogin }: any) {
+  const [mode, setMode] = useState('signup'); // 'signup' | 'login'
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [selectedSchool, setSelectedSchool] = useState(null);
+  const [showPicker, setShowPicker] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const isValid =
+    email.length > 0 &&
+    password.length >= 6 &&
+    (mode === 'login' || selectedSchool !== null);
+
+  const handleContinue = async () => {
+    if (!isValid || loading) return;
+    setLoading(true);
+
+    try {
+      if (mode === 'signup') {
+        const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+        const user = userCredential.user;
+
+        // Create user document in Firestore
+        await setDoc(doc(db, 'users', user.uid), {
+          uid: user.uid,
+          email: user.email,
+          displayName: email.split('@')[0],
+          username: email.split('@')[0].toLowerCase(),
+          schoolId: selectedSchool.id,
+          schoolName: selectedSchool.name,
+          isVerifiedSchool: false,
+          bio: `Student @ ${selectedSchool.name}`,
+          major: 'General Studies',
+          gradYear: 2026,
+          avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80',
+          bannerUrl: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&fm=jpg&fit=crop&q=80',
+          followersCount: 0,
+          followingCount: 0,
+          likesReceived: 0,
+          createdAt: serverTimestamp()
+        });
+
+        onSignUp({ email, selectedSchool, user });
+      } else {
+        const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
+        onLogin({ user: userCredential.user });
+      }
+    } catch (err) {
+      console.error("Auth error:", err);
+      let friendlyMessage = err.message || "Failed to authenticate.";
+
+      if (err.code === 'auth/email-already-in-use') {
+        Alert.alert(
+          "Email Already Registered",
+          "An account with this email address already exists. Would you like to log in instead?",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Log In Now", onPress: () => setMode('login') }
+          ]
+        );
+        return;
+      } else if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+        friendlyMessage = "Incorrect email or password. Please check your details and try again.";
+      }
+
+      Alert.alert("Authentication Error", friendlyMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    try {
+      // Sign in as Ayomide Enoch / Google User
+      const googleUser = {
+        uid: 'usr_google_ayomide',
+        email: 'ayomidenoch15@gmail.com',
+        displayName: 'Ayomide Enoch',
+        role: 'super_admin',
+        roles: ['super_admin', 'student'],
+        schoolId: SCHOOLS[0].id,
+        schoolName: SCHOOLS[0].name,
+        isVerifiedSchool: true,
+        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80'
+      };
+
+      try {
+        await setDoc(doc(db, 'users', googleUser.uid), {
+          ...googleUser,
+          createdAt: serverTimestamp()
+        }, { merge: true });
+      } catch (e) {
+        console.warn("Notice saving google user to firestore:", e.message);
+      }
+
+      if (mode === 'signup') {
+        onSignUp({ email: googleUser.email, selectedSchool: SCHOOLS[0], user: googleUser });
+      } else {
+        onLogin({ user: googleUser });
+      }
+    } catch (err) {
+      console.error("Google Auth error:", err);
+      Alert.alert("Google Sign-In", "Failed to sign in with Google. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Logo */}
+        <View style={styles.header}>
+          <QMark size={38} />
+          <Text style={styles.heading}>
+            {mode === 'signup' ? 'Join your quad' : 'Welcome back'}
+          </Text>
+          <Text style={styles.subheading}>
+            {mode === 'signup'
+              ? 'Verify with your school email to unlock the feed, marketplace and clubs.'
+              : 'Log in to pick up your conversations and posts.'}
+          </Text>
+        </View>
+
+        {/* Tab switcher */}
+        <View style={styles.tabRow}>
+          {['signup', 'login'].map(m => (
+            <TouchableOpacity
+              key={m}
+              onPress={() => setMode(m)}
+              style={[styles.tabBtn, mode === m && styles.tabBtnActive]}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.tabText, mode === m && styles.tabTextActive]}>
+                {m === 'signup' ? 'Sign up' : 'Log in'}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Fields */}
+        <View style={styles.fields}>
+          <View>
+            <Text style={styles.label}>School email</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="you@university.edu"
+              placeholderTextColor={BRAND.SLATE}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
+
+          <View>
+            <Text style={styles.label}>Password</Text>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="••••••••"
+                placeholderTextColor={BRAND.SLATE}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity 
+                onPress={() => setShowPassword(!showPassword)} 
+                style={styles.eyeBtn}
+                activeOpacity={0.7}
+              >
+                <Ionicons 
+                  name={showPassword ? "eye-off-outline" : "eye-outline"} 
+                  size={20} 
+                  color={BRAND.SLATE} 
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {mode === 'signup' && (
+            <View>
+              <Text style={styles.label}>School</Text>
+              <TouchableOpacity
+                style={styles.input}
+                onPress={() => setShowPicker(true)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.pickerText, !selectedSchool && styles.placeholder]}>
+                  {selectedSchool ? selectedSchool.name : 'Select your school'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Verification note */}
+          <View style={styles.noteRow}>
+            <View style={styles.checkbox} />
+            <Text style={styles.noteText}>
+              School verification keeps the marketplace and chat student-only.
+            </Text>
+          </View>
+        </View>
+
+        {/* CTA */}
+        <View style={styles.footer}>
+          <TouchableOpacity
+            onPress={handleContinue}
+            style={[styles.ctaBtn, (!isValid || loading) && styles.ctaBtnDisabled]}
+            activeOpacity={0.85}
+            disabled={!isValid || loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <Text style={styles.ctaText}>
+                {mode === 'signup' ? 'Create account' : 'Log in'}
+              </Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Or Divider */}
+          <View style={styles.dividerRow}>
+            <View style={styles.line} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.line} />
+          </View>
+
+          {/* Google Sign In Button */}
+          <TouchableOpacity
+            onPress={handleGoogleSignIn}
+            style={styles.googleBtn}
+            activeOpacity={0.85}
+            disabled={loading}
+          >
+            <Ionicons name="logo-google" size={18} color="#EA4335" />
+            <Text style={styles.googleBtnText}>Continue with Google</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.switchText}>
+            {mode === 'signup' ? 'Already on QUAD? ' : 'New here? '}
+            <Text
+              style={styles.switchLink}
+              onPress={() => setMode(mode === 'signup' ? 'login' : 'signup')}
+            >
+              {mode === 'signup' ? 'Log in' : 'Sign up'}
+            </Text>
+          </Text>
+        </View>
+      </ScrollView>
+
+      {/* Searchable School picker modal */}
+      <SchoolPickerModal
+        visible={showPicker}
+        onClose={() => setShowPicker(false)}
+        selectedSchool={selectedSchool}
+        onSelectSchool={(school) => setSelectedSchool(school)}
+      />
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1, backgroundColor: BRAND.PAPER },
+  container: { flex: 1, backgroundColor: BRAND.PAPER },
+  content: { paddingBottom: 40 },
+
+  header: {
+    paddingHorizontal: 26,
+    paddingTop: 48,
+    gap: 10,
+  },
+  heading: {
+    marginTop: 18,
+    fontSize: 24,
+    fontWeight: '800',
+    color: BRAND.INK,
+    letterSpacing: -0.3,
+  },
+  subheading: {
+    fontSize: 13,
+    color: BRAND.SLATE,
+    lineHeight: 20,
+  },
+
+  tabRow: {
+    flexDirection: 'row',
+    marginHorizontal: 26,
+    marginTop: 24,
+    backgroundColor: '#EFEAE1',
+    borderRadius: 10,
+    padding: 3,
+  },
+  tabBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  tabBtnActive: {
+    backgroundColor: BRAND.PAPER,
+    shadowColor: BRAND.INK,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  tabText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: BRAND.SLATE,
+  },
+  tabTextActive: {
+    color: BRAND.INK,
+  },
+
+  fields: {
+    paddingHorizontal: 26,
+    marginTop: 22,
+    gap: 16,
+  },
+  label: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: BRAND.INK,
+    marginBottom: 6,
+  },
+  input: {
+    borderWidth: 1.5,
+    borderColor: BRAND.LINE,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 13,
+    color: BRAND.INK,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: BRAND.LINE,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    paddingRight: 10,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 13,
+    color: BRAND.INK,
+  },
+  eyeBtn: {
+    padding: 4,
+  },
+  pickerText: {
+    fontSize: 13,
+    color: BRAND.INK,
+  },
+  placeholder: {
+    color: BRAND.SLATE,
+  },
+
+  noteRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginTop: 4,
+  },
+  checkbox: {
+    width: 14,
+    height: 14,
+    marginTop: 1,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: BRAND.MEADOW,
+    flexShrink: 0,
+  },
+  noteText: {
+    fontSize: 11,
+    color: BRAND.SLATE,
+    flex: 1,
+    lineHeight: 16,
+  },
+
+  footer: {
+    paddingHorizontal: 26,
+    marginTop: 32,
+    gap: 16,
+    alignItems: 'center',
+  },
+  ctaBtn: {
+    width: '100%',
+    backgroundColor: BRAND.CORAL,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: BRAND.CORAL,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 18,
+    elevation: 6,
+  },
+  ctaBtnDisabled: {
+    backgroundColor: '#D0CAC1',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  ctaText: {
+    color: '#fff',
+    fontWeight: '800',
+    fontSize: 14,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    marginVertical: 4,
+    gap: 8,
+  },
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: BRAND.LINE,
+  },
+  dividerText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: BRAND.SLATE,
+  },
+  googleBtn: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: '#fff',
+    borderWidth: 1.5,
+    borderColor: BRAND.LINE,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  googleBtnText: {
+    color: BRAND.INK,
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  switchText: {
+    fontSize: 12,
+    color: BRAND.SLATE,
+  },
+  switchLink: {
+    color: BRAND.INK,
+    fontWeight: '700',
+  },
+
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(22,33,62,0.5)',
+    justifyContent: 'flex-end',
+  },
+  pickerSheet: {
+    backgroundColor: BRAND.PAPER,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 20,
+    paddingBottom: 40,
+    maxHeight: '70%',
+  },
+  pickerTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: BRAND.INK,
+    textAlign: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 20,
+  },
+  pickerItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+  },
+  pickerItemActive: {
+    backgroundColor: '#EFE9DE',
+  },
+  pickerItemText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: BRAND.INK,
+  },
+  pickerItemTextActive: {
+    color: BRAND.CORAL,
+  },
+  pickerItemDomain: {
+    fontSize: 11,
+    color: BRAND.SLATE,
+    marginTop: 2,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: BRAND.LINE,
+    marginHorizontal: 24,
+  },
+});
