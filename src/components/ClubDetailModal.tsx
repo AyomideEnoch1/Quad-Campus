@@ -50,14 +50,14 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
 
   const handleAttachMedia = async () => {
     try {
-      const url = await pickAndUploadImage('club_chats');
-      if (url) {
+      const res = await pickAndUploadImage('club_chats');
+      if (res?.url) {
         await sendClubMessage(club.id, {
           senderId: currentUser.uid,
           senderName: currentUser.displayName || 'Student',
           senderAvatar: currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80',
           senderRole: currentUser.role || 'student',
-          mediaUrl: url,
+          mediaUrl: res.url,
           text: ''
         });
       }

@@ -64,7 +64,7 @@ export interface CreatePostParams {
   content: string;
   mediaUrls?: string[];
   mediaType?: 'image' | 'video' | null;
-  scope?: 'my_school' | 'all_schools';
+  scope?: 'my_school' | 'all_schools' | string;
 }
 
 export async function createPost({

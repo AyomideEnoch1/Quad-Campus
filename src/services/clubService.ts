@@ -147,6 +147,7 @@ export interface SendClubMessageParams {
   senderAvatar?: string;
   senderRole?: string;
   text: string;
+  mediaUrl?: string;
 }
 
 export async function sendClubMessage(clubId: string, { senderId, senderName, senderAvatar, text }: SendClubMessageParams): Promise<void> {
