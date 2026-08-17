@@ -1,5 +1,5 @@
 import { db } from '../config/firebase';
-import { collection, doc, setDoc, onSnapshot, query, where, serverTimestamp, Unsubscribe } from 'firebase/firestore';
+import { collection, doc, setDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, Unsubscribe } from 'firebase/firestore';
 import { NotificationItem } from '../types';
 
 const NOTIFS_COLLECTION = 'notifications';
@@ -42,13 +42,25 @@ export function subscribeUserNotifications(
   try {
     const q = query(
       collection(db, NOTIFS_COLLECTION),
-      where('userId', '==', userId)
+      where('userId', '==', userId),
+      limit(50)
     );
 
     return onSnapshot(q, (snapshot) => {
       if (!snapshot.empty) {
-        const notifs = snapshot.docs.map(d => ({ id: d.id, ...(d.data() as any) }));
-        callback(notifs as NotificationItem[]);
+        const notifs = snapshot.docs.map(d => {
+          const data = d.data();
+          return {
+            id: d.id,
+            ...data,
+            time: data.createdAt?.toDate
+              ? formatTimeAgo(data.createdAt.toDate())
+              : data.time || 'Just now',
+            _rawDate: data.createdAt?.toDate ? data.createdAt.toDate() : new Date()
+          };
+        }).sort((a, b) => b._rawDate.getTime() - a._rawDate.getTime());
+
+        callback(notifs as unknown as NotificationItem[]);
       } else {
         callback(INITIAL_NOTIFICATIONS);
       }
@@ -88,4 +100,15 @@ export async function createNotificationEvent({ userId, title, message, type = '
   } catch (err: any) {
     console.warn("Error creating notification event:", err?.message || err);
   }
+}
+
+function formatTimeAgo(date: Date): string {
+  const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+  if (seconds < 60) return 'Just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
 }

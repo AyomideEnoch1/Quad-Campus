@@ -103,7 +103,10 @@ export async function createPost({
   return docRef.id;
 }
 
-export async function toggleLikePost(postId: string, userUid: string, isLiked?: boolean): Promise<void> {
+import { createNotificationEvent } from './notificationService';
+import { getDoc } from 'firebase/firestore';
+
+export async function toggleLikePost(postId: string, userUid: string, isLiked?: boolean, currentUser?: any): Promise<void> {
   const postRef = doc(db, 'posts', postId);
   
   if (isLiked) {
@@ -116,6 +119,24 @@ export async function toggleLikePost(postId: string, userUid: string, isLiked?: 
       likesCount: increment(1),
       likedBy: arrayUnion(userUid)
     });
+
+    try {
+      const snap = await getDoc(postRef);
+      if (snap.exists()) {
+        const postData = snap.data();
+        if (postData.authorId && postData.authorId !== userUid) {
+          await createNotificationEvent({
+            userId: postData.authorId,
+            title: 'New Like on your post ❤️',
+            message: `${currentUser?.displayName || 'Someone'} liked your post.`,
+            type: 'like',
+            avatar: currentUser?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80'
+          });
+        }
+      }
+    } catch (e) {
+      console.warn("Like notification notice:", e);
+    }
   }
 }
 

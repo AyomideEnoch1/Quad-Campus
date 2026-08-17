@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal } from 'react-native';
 import QuadImage from '../components/QuadImage';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
@@ -7,9 +7,9 @@ import { subscribeUserChats } from '../services/chatService';
 import EmptyState from '../components/EmptyState';
 import ChatDetailScreen from './ChatDetailScreen';
 
-export default function ChatScreen({ chats: initialChats, currentUser, activeChat: externalActiveChat, onClearActiveChat }) {
+export default function ChatScreen({ chats: initialChats, currentUser, activeChat: externalActiveChat, onClearActiveChat }: any) {
   const [chats, setChats] = useState(initialChats || []);
-  const [activeChat, setActiveChat] = useState(externalActiveChat || null);
+  const [activeChat, setActiveChat] = useState<any>(externalActiveChat || null);
 
   useEffect(() => {
     if (externalActiveChat) {
@@ -27,38 +27,24 @@ export default function ChatScreen({ chats: initialChats, currentUser, activeCha
     return unsub;
   }, [currentUser?.uid]);
 
-  if (activeChat) {
-    return (
-      <ChatDetailScreen
-        chatId={activeChat.id}
-        partner={activeChat.partner}
-        currentUser={currentUser}
-        onBack={() => {
-          setActiveChat(null);
-          if (onClearActiveChat) onClearActiveChat();
-        }}
-      />
-    );
-  }
-
-  const renderChatItem = ({ item }) => (
+  const renderChatItem = ({ item }: { item: any }) => (
     <TouchableOpacity 
       onPress={() => setActiveChat(item)} 
       style={styles.chatCard} 
       activeOpacity={0.7}
     >
       <View style={styles.avatarContainer}>
-        <QuadImage uri={item.partner.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' } style={styles.avatar} />
+        <QuadImage uri={item.partner?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' } style={styles.avatar} />
         <View style={styles.onlineDot} />
       </View>
 
       <View style={{ flex: 1 }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <Text style={styles.partnerName}>{item.partner.displayName}</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={styles.partnerName}>{item.partner?.displayName || 'Campus Student'}</Text>
           <Text style={styles.timeText}>{item.lastMessageTime}</Text>
         </View>
 
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 3 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
           <Text style={styles.lastMsg} numberOfLines={1}>{item.lastMessage}</Text>
           {item.unread > 0 && (
             <View style={styles.unreadBadge}>
@@ -76,7 +62,7 @@ export default function ChatScreen({ chats: initialChats, currentUser, activeCha
         data={chats}
         keyExtractor={item => item.id}
         renderItem={renderChatItem}
-        contentContainerStyle={{ padding: 12, gap: 8 }}
+        contentContainerStyle={{ padding: 14, gap: 10 }}
         ListEmptyComponent={
           <EmptyState
             icon="chatbubble-ellipses-outline"
@@ -85,6 +71,29 @@ export default function ChatScreen({ chats: initialChats, currentUser, activeCha
           />
         }
       />
+
+      {/* Full-Screen Edge-to-Edge Chat Room Modal */}
+      <Modal
+        visible={!!activeChat}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => {
+          setActiveChat(null);
+          if (onClearActiveChat) onClearActiveChat();
+        }}
+      >
+        {activeChat && (
+          <ChatDetailScreen
+            chatId={activeChat.id}
+            partner={activeChat.partner}
+            currentUser={currentUser}
+            onBack={() => {
+              setActiveChat(null);
+              if (onClearActiveChat) onClearActiveChat();
+            }}
+          />
+        )}
+      </Modal>
     </View>
   );
 }
@@ -99,7 +108,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: COLORS.bgCard,
     borderRadius: RADIUS.lg,
-    padding: 12,
+    padding: 14,
     gap: 12,
     borderWidth: 1,
     borderColor: COLORS.borderColor,
@@ -109,44 +118,47 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
   },
   onlineDot: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: COLORS.badgeGreen,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#22C55E',
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: '#FFFFFF',
   },
   partnerName: {
+    fontSize: 15,
     fontWeight: '700',
-    fontSize: 14,
     color: COLORS.textMain,
   },
   timeText: {
     fontSize: 11,
-    color: COLORS.textLight,
+    color: COLORS.textMuted,
   },
   lastMsg: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.textMuted,
     flex: 1,
+    marginRight: 8,
   },
   unreadBadge: {
     backgroundColor: COLORS.primary,
-    paddingHorizontal: 6,
+    paddingHorizontal: 7,
     paddingVertical: 2,
-    borderRadius: RADIUS.full,
+    borderRadius: 10,
+    minWidth: 20,
+    alignItems: 'center',
   },
   unreadText: {
     color: '#fff',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
   }
 });

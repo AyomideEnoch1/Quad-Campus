@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import * as Notifications from 'expo-notifications';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -68,9 +69,24 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
 
   useEffect(() => {
     if (!currentUser?.uid) return;
+    let seenIds = new Set<string>();
+
     const unsub = subscribeUserNotifications(currentUser.uid, (liveNotifs) => {
       if (liveNotifs && liveNotifs.length > 0) {
         setNotifications(liveNotifs);
+
+        const brandNew = liveNotifs.find(n => !n.read && !seenIds.has(n.id));
+        if (brandNew && seenIds.size > 0) {
+          Notifications.scheduleNotificationAsync({
+            content: {
+              title: brandNew.title,
+              body: brandNew.message,
+              sound: 'default',
+            },
+            trigger: null,
+          });
+        }
+        seenIds = new Set(liveNotifs.map(n => n.id));
       }
     });
     return unsub;

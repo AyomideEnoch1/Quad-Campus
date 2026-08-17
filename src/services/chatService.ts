@@ -90,6 +90,8 @@ export function subscribeChatMessages(chatId: string, callback: (messages: Direc
   });
 }
 
+import { createNotificationEvent } from './notificationService';
+
 export async function sendMessage(chatId: string, senderUid: string, text: string): Promise<void> {
   if (!text || text.trim().length === 0) return;
 
@@ -106,6 +108,25 @@ export async function sendMessage(chatId: string, senderUid: string, text: strin
     lastMessage: text.trim(),
     lastMessageTime: serverTimestamp()
   });
+
+  try {
+    const chatSnap = await getDoc(chatRef);
+    if (chatSnap.exists()) {
+      const data = chatSnap.data();
+      const participants = data.participants || [];
+      const partnerUid = participants.find((id: string) => id !== senderUid);
+      if (partnerUid) {
+        await createNotificationEvent({
+          userId: partnerUid,
+          title: 'New Direct Message 📩',
+          message: text.trim(),
+          type: 'message'
+        });
+      }
+    }
+  } catch (e) {
+    console.warn("Message notification notice:", e);
+  }
 }
 
 function formatTimeAgo(date: Date): string {
