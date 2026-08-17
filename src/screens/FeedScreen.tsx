@@ -14,6 +14,7 @@ import EmptyState from '../components/EmptyState';
 import RoleBadge from '../components/RoleBadge';
 import AdComposerModal from '../components/AdComposerModal';
 import AdsReviewScreen from './AdsReviewScreen';
+import UserProfileModal from '../components/UserProfileModal';
 import { createNotificationEvent } from '../services/notificationService';
 
 export default function FeedScreen({ posts: initialPosts, currentSchool, currentUser, onOpenPostModal }: any) {
@@ -23,6 +24,7 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
   const [refreshing, setRefreshing] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
   const [activeCommentPost, setActiveCommentPost] = useState(null);
+  const [selectedAuthorUser, setSelectedAuthorUser] = useState<any>(null);
 
   const handleBroadcastToAllCampuses = (post) => {
     Alert.alert(
@@ -250,14 +252,38 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
       <View style={styles.postCard}>
         {/* Header */}
         <View style={styles.authorRow}>
-          <QuadImage uri={avatar} fallbackIcon="person-circle" style={styles.avatar} />
-          <View style={{ flex: 1 }}>
+          <TouchableOpacity 
+            onPress={() => setSelectedAuthorUser({
+              uid: item.authorId,
+              displayName: authorName,
+              username: authorUsername,
+              avatarUrl: avatar,
+              schoolName: item.authorSchoolName,
+              role: item.authorRole || 'student',
+            })}
+            activeOpacity={0.7}
+          >
+            <QuadImage uri={avatar} fallbackIcon="person-circle" style={styles.avatar} />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            onPress={() => setSelectedAuthorUser({
+              uid: item.authorId,
+              displayName: authorName,
+              username: authorUsername,
+              avatarUrl: avatar,
+              schoolName: item.authorSchoolName,
+              role: item.authorRole || 'student',
+            })}
+            style={{ flex: 1 }}
+            activeOpacity={0.7}
+          >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
               <Text style={styles.authorName}>{authorName}</Text>
               <RoleBadge role={item.authorRole || 'student'} size={15} />
             </View>
             <Text style={styles.authorSub}>@{authorUsername} • {item.authorSchoolName}</Text>
-          </View>
+          </TouchableOpacity>
           <Text style={styles.timeText}>{item.createdAt}</Text>
 
           <TouchableOpacity onPress={() => setMenuPost(item)} style={styles.morePostBtn}>
@@ -393,6 +419,14 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
         visible={!!activeCommentPost}
         onClose={() => setActiveCommentPost(null)}
         post={activeCommentPost}
+        currentUser={currentUser}
+      />
+
+      <UserProfileModal
+        visible={!!selectedAuthorUser}
+        onClose={() => setSelectedAuthorUser(null)}
+        userId={selectedAuthorUser?.uid}
+        initialUserData={selectedAuthorUser}
         currentUser={currentUser}
       />
 

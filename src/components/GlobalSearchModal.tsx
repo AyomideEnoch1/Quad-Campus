@@ -6,12 +6,14 @@ import { COLORS, RADIUS } from '../constants/theme';
 import RoleBadge from './RoleBadge';
 import { collection, query, getDocs, limit } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import UserProfileModal from './UserProfileModal';
 
-export default function GlobalSearchModal({ visible, onClose, posts = [], marketplaceItems = [], clubs = [], onSelectClub, onSelectListing }: any) {
+export default function GlobalSearchModal({ visible, onClose, posts = [], marketplaceItems = [], clubs = [], onSelectClub, onSelectListing, currentUser }: any) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'users' | 'posts' | 'market' | 'clubs'
   const [usersList, setUsersList] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [selectedSearchUser, setSelectedSearchUser] = useState<any>(null);
 
   useEffect(() => {
     if (!visible) return;
@@ -121,9 +123,13 @@ export default function GlobalSearchModal({ visible, onClose, posts = [], market
             renderItem={({ item }) => {
               if (item._type === 'user') {
                 return (
-                  <View style={styles.resultCard}>
+                  <TouchableOpacity 
+                    onPress={() => setSelectedSearchUser(item)}
+                    style={styles.resultCard}
+                    activeOpacity={0.7}
+                  >
                     <View style={styles.cardHeader}>
-                      <QuadImage uri={item.avatarUrl } style={styles.avatar} />
+                      <QuadImage uri={item.avatarUrl} fallbackIcon="person-circle" style={styles.avatar} />
                       <View style={{ flex: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                           <Text style={styles.name}>{item.displayName}</Text>
@@ -135,14 +141,24 @@ export default function GlobalSearchModal({ visible, onClose, posts = [], market
                         <Text style={styles.badgeText}>User</Text>
                       </View>
                     </View>
-                  </View>
+                  </TouchableOpacity>
                 );
               }
               if (item._type === 'post') {
                 return (
                   <View style={styles.resultCard}>
-                    <View style={styles.cardHeader}>
-                      <QuadImage uri={item.authorAvatar } style={styles.avatar} />
+                    <TouchableOpacity 
+                      onPress={() => setSelectedSearchUser({
+                        uid: item.authorId,
+                        displayName: item.authorName,
+                        avatarUrl: item.authorAvatar,
+                        schoolName: item.authorSchoolName,
+                        role: item.authorRole || 'student',
+                      })}
+                      style={styles.cardHeader}
+                      activeOpacity={0.7}
+                    >
+                      <QuadImage uri={item.authorAvatar} fallbackIcon="person-circle" style={styles.avatar} />
                       <View style={{ flex: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                           <Text style={styles.name}>{item.authorName}</Text>
@@ -150,7 +166,7 @@ export default function GlobalSearchModal({ visible, onClose, posts = [], market
                         </View>
                         <Text style={styles.sub}>Post • {item.authorSchoolName}</Text>
                       </View>
-                    </View>
+                    </TouchableOpacity>
                     <Text style={styles.bodyText} numberOfLines={2}>{item.content}</Text>
                   </View>
                 );
@@ -205,6 +221,14 @@ export default function GlobalSearchModal({ visible, onClose, posts = [], market
           />
         )}
       </SafeAreaView>
+
+      <UserProfileModal
+        visible={!!selectedSearchUser}
+        onClose={() => setSelectedSearchUser(null)}
+        userId={selectedSearchUser?.id || selectedSearchUser?.uid}
+        initialUserData={selectedSearchUser}
+        currentUser={currentUser}
+      />
     </Modal>
   );
 }

@@ -9,6 +9,8 @@ import RoleBadge from './RoleBadge';
 import { createNotificationEvent } from '../services/notificationService';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import UserProfileModal from './UserProfileModal';
+
 export default function CommentsModal({ visible, onClose, post, currentUser }: any) {
   const insets = useSafeAreaInsets();
   const bottomPadding = Math.max(insets.bottom, 12);
@@ -16,6 +18,7 @@ export default function CommentsModal({ visible, onClose, post, currentUser }: a
   const [comments, setComments] = useState<any[]>([]);
   const [commentText, setCommentText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [selectedCommentAuthor, setSelectedCommentAuthor] = useState<any>(null);
 
   useEffect(() => {
     if (!post?.id || !visible) return;
@@ -57,13 +60,33 @@ export default function CommentsModal({ visible, onClose, post, currentUser }: a
 
   const renderComment = ({ item }: { item: any }) => (
     <View style={styles.commentRow}>
-      <QuadImage uri={item.authorAvatar} style={styles.commentAvatar} />
+      <TouchableOpacity 
+        onPress={() => setSelectedCommentAuthor({
+          uid: item.authorId,
+          displayName: item.authorName,
+          avatarUrl: item.authorAvatar,
+          role: item.authorRole || 'student',
+        })}
+        activeOpacity={0.7}
+      >
+        <QuadImage uri={item.authorAvatar} fallbackIcon="person-circle" style={styles.commentAvatar} />
+      </TouchableOpacity>
+
       <View style={styles.commentBubble}>
         <View style={styles.commentHeader}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <TouchableOpacity 
+            onPress={() => setSelectedCommentAuthor({
+              uid: item.authorId,
+              displayName: item.authorName,
+              avatarUrl: item.authorAvatar,
+              role: item.authorRole || 'student',
+            })}
+            activeOpacity={0.7}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+          >
             <Text style={styles.commentAuthor}>{item.authorName}</Text>
             <RoleBadge role={item.authorRole || 'student'} size={13} />
-          </View>
+          </TouchableOpacity>
           <Text style={styles.commentTime}>{item.createdAt}</Text>
         </View>
         <Text style={styles.commentText}>{item.text}</Text>
@@ -123,6 +146,14 @@ export default function CommentsModal({ visible, onClose, post, currentUser }: a
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      <UserProfileModal
+        visible={!!selectedCommentAuthor}
+        onClose={() => setSelectedCommentAuthor(null)}
+        userId={selectedCommentAuthor?.uid}
+        initialUserData={selectedCommentAuthor}
+        currentUser={currentUser}
+      />
     </Modal>
   );
 }

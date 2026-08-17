@@ -4,7 +4,8 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Feather } from '@expo/vector-icons';
-import { useSafeAreaInsets, SafeAreaProvider } from 'react-native-safe-area-context';
+import { Modal } from 'react-native';
+import { useSafeAreaInsets, SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { auth, db } from './src/config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -66,6 +67,7 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
   const [showSchoolPicker, setShowSchoolPicker] = useState<boolean>(false);
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
   const [showSearch, setShowSearch] = useState<boolean>(false);
+  const [showProfile, setShowProfile] = useState<boolean>(false);
 
   useEffect(() => {
     if (!currentUser?.uid) return;
@@ -104,6 +106,7 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
         unreadNotifications={unreadCount}
         onOpenSearch={() => setShowSearch(true)}
         onOpenNotifications={() => setShowNotifications(true)}
+        onOpenProfile={() => setShowProfile(true)}
         onOpenVerification={() =>
           setCurrentUser({ ...currentUser, isVerifiedSchool: true })
         }
@@ -131,7 +134,31 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
         posts={posts}
         marketplaceItems={items}
         clubs={clubs}
+        currentUser={currentUser}
       />
+
+      {/* Full-screen Profile View Modal */}
+      <Modal
+        visible={showProfile}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setShowProfile(false)}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.bgCard }} edges={['top', 'bottom']}>
+          <ProfileScreen
+            currentUser={currentUser}
+            setCurrentUser={setCurrentUser}
+            onClose={() => setShowProfile(false)}
+            onSignOut={() => {
+              setShowProfile(false);
+              onSignOut();
+            }}
+            onOpenVerification={() =>
+              setCurrentUser({ ...currentUser, isVerifiedSchool: true })
+            }
+          />
+        </SafeAreaView>
+      </Modal>
 
       <Tab.Navigator
         screenOptions={({ route }) => ({
@@ -151,7 +178,6 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
               Market: 'shopping-bag',
               Chat: 'message-square',
               Clubs: 'users',
-              Profile: 'user',
             };
             return <Feather name={icons[route.name]} size={20} color={color} />;
           },
@@ -210,20 +236,6 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
         <Tab.Screen name="Clubs">
           {(props: any) => (
             <ClubsScreen {...props} clubs={clubs} setClubs={setClubs} currentUser={currentUser} currentSchool={currentSchool} />
-          )}
-        </Tab.Screen>
-
-        <Tab.Screen name="Profile">
-          {(props: any) => (
-            <ProfileScreen
-              {...props}
-              currentUser={currentUser}
-              setCurrentUser={setCurrentUser}
-              onSignOut={onSignOut}
-              onOpenVerification={() =>
-                setCurrentUser({ ...currentUser, isVerifiedSchool: true })
-              }
-            />
           )}
         </Tab.Screen>
       </Tab.Navigator>

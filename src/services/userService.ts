@@ -34,6 +34,52 @@ export async function updateUserProfile(uid: string, updateData: Partial<UserPro
   });
 }
 
+export async function checkIfFollowing(currentUid: string, targetUid: string): Promise<boolean> {
+  if (!currentUid || !targetUid || currentUid === targetUid) return false;
+  try {
+    const followRef = doc(db, 'users', currentUid, 'following', targetUid);
+    const snap = await getDoc(followRef);
+    return snap.exists();
+  } catch (e) {
+    console.error("Error checking follow status:", e);
+    return false;
+  }
+}
+
+export async function checkIfProfileLiked(currentUid: string, targetUid: string): Promise<boolean> {
+  if (!currentUid || !targetUid || currentUid === targetUid) return false;
+  try {
+    const likeRef = doc(db, 'users', targetUid, 'profileLikes', currentUid);
+    const snap = await getDoc(likeRef);
+    return snap.exists();
+  } catch (e) {
+    console.error("Error checking profile like status:", e);
+    return false;
+  }
+}
+
+export async function toggleLikeUserProfile(currentUid: string, targetUid: string): Promise<boolean> {
+  if (!currentUid || !targetUid || currentUid === targetUid) return false;
+
+  const likeRef = doc(db, 'users', targetUid, 'profileLikes', currentUid);
+  const targetUserRef = doc(db, 'users', targetUid);
+  const snap = await getDoc(likeRef);
+  
+  if (snap.exists()) {
+    await deleteDoc(likeRef);
+    await updateDoc(targetUserRef, { likesReceived: increment(-1) });
+    return false;
+  } else {
+    await updateDoc(likeRef, { likedAt: serverTimestamp() }).catch(async () => {
+      const batch = writeBatch(db);
+      batch.set(likeRef, { likedAt: serverTimestamp() });
+      await batch.commit();
+    });
+    await updateDoc(targetUserRef, { likesReceived: increment(1) });
+    return true;
+  }
+}
+
 export async function toggleFollowUser(currentUid: string, targetUid: string, isFollowing: boolean): Promise<void> {
   if (!currentUid || !targetUid) return;
 

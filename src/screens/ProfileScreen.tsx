@@ -11,7 +11,7 @@ import RoleBadge from '../components/RoleBadge';
 import AdComposerModal from '../components/AdComposerModal';
 import AdsReviewScreen from './AdsReviewScreen';
 
-export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerification, onSignOut }: any) {
+export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerification, onSignOut, onClose }: any) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAdModal, setShowAdModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -65,9 +65,18 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
-      {/* Banner with 3-Dots Settings Menu */}
+      {/* Banner with Back Button & 3-Dots Settings Menu */}
       <View style={{ position: 'relative' }}>
         <QuadImage uri={currentUser.bannerUrl || 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&fm=jpg&fit=crop&q=80' } style={styles.banner} />
+        {onClose && (
+          <TouchableOpacity 
+            onPress={onClose} 
+            style={styles.topBackBtn}
+            activeOpacity={0.8}
+          >
+            <Feather name="arrow-left" size={20} color="#fff" />
+          </TouchableOpacity>
+        )}
         <TouchableOpacity 
           onPress={() => setShowSettingsMenu(true)} 
           style={styles.topMenuBtn}
@@ -420,6 +429,18 @@ const styles = StyleSheet.create({
   rolePillActive: {
     backgroundColor: COLORS.primaryLight,
     borderColor: COLORS.primary,
+  },
+  topBackBtn: {
+    position: 'absolute',
+    top: 14,
+    left: 14,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
   },
   topMenuBtn: {
     position: 'absolute',
