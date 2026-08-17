@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
-import { Image } from 'expo-image';
+import QuadImage from '../components/QuadImage';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeClubs, toggleJoinClub } from '../services/clubService';
@@ -51,9 +51,9 @@ export default function ClubsScreen({ clubs: initialClubs, currentUser, currentS
       activeOpacity={0.85}
       onPress={() => setSelectedClub(item)}
     >
-      <Image source={{ uri: item.bannerUrl }} style={styles.banner} />
+      <QuadImage uri={item.bannerUrl } style={styles.banner} />
       <View style={styles.infoRow}>
-        <Image source={{ uri: item.logoUrl }} style={styles.logo} />
+        <QuadImage uri={item.logoUrl } style={styles.logo} />
         <View style={{ flex: 1 }}>
           <Text style={styles.clubName}>{item.name}</Text>
           <Text style={styles.tagline}>{item.tagline}</Text>

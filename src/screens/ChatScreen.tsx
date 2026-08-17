@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { Image } from 'expo-image';
+import QuadImage from '../components/QuadImage';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeUserChats } from '../services/chatService';
@@ -48,7 +48,7 @@ export default function ChatScreen({ chats: initialChats, currentUser, activeCha
       activeOpacity={0.7}
     >
       <View style={styles.avatarContainer}>
-        <Image source={{ uri: item.partner.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' }} style={styles.avatar} />
+        <QuadImage uri={item.partner.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' } style={styles.avatar} />
         <View style={styles.onlineDot} />
       </View>
 

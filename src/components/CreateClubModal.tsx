@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView,
   ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { Image } from 'expo-image';
+import QuadImage from './QuadImage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
@@ -103,7 +103,7 @@ export default function CreateClubModal({ visible, onClose, currentUser, current
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             {/* Banner Upload Card */}
             <TouchableOpacity onPress={handlePickBanner} style={styles.bannerPicker} activeOpacity={0.85}>
-              <Image source={{ uri: bannerUrl }} style={styles.bannerPreview} />
+              <QuadImage uri={bannerUrl } style={styles.bannerPreview} />
               <View style={styles.bannerOverlay}>
                 <Ionicons name="camera-outline" size={24} color="#fff" />
                 <Text style={styles.bannerOverlayText}>

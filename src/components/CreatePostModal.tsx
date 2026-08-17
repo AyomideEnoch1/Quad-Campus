@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, View, Text, TextInput, TouchableOpacity,
   StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, Alert } from 'react-native';
-import { Image } from 'expo-image';
+import QuadImage from './QuadImage';
 import { Video, ResizeMode } from 'expo-av';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -149,7 +149,7 @@ export default function CreatePostModal({ visible, onClose, currentUser, current
                   isLooping
                 />
               ) : (
-                <Image source={{ uri: selectedMedia.uri }} style={styles.imagePreview} contentFit="cover" />
+                <QuadImage uri={selectedMedia.uri } style={styles.imagePreview} contentFit="cover" />
               )}
 
               <TouchableOpacity 

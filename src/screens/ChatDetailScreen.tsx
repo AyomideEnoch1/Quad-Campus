@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity,
   KeyboardAvoidingView, Platform } from 'react-native';
-import { Image } from 'expo-image';
+import QuadImage from '../components/QuadImage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
@@ -38,9 +38,7 @@ export default function ChatDetailScreen({ chatId, partner, currentUser, onBack 
     return (
       <View style={[styles.msgWrapper, isMe ? styles.msgRight : styles.msgLeft]}>
         {!isMe && (
-          <Image 
-            source={{ uri: partner?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' }} 
-            style={styles.smallAvatar} 
+          <QuadImage uri={partner?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' } style={styles.smallAvatar} 
           />
         )}
         <View style={[styles.msgBubble, isMe ? styles.bubbleRight : styles.bubbleLeft]}>
@@ -60,9 +58,7 @@ export default function ChatDetailScreen({ chatId, partner, currentUser, onBack 
           <Ionicons name="chevron-back" size={24} color={COLORS.textMain} />
         </TouchableOpacity>
         
-        <Image 
-          source={{ uri: partner?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' }} 
-          style={styles.headerAvatar} 
+        <QuadImage uri={partner?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' } style={styles.headerAvatar} 
         />
 
         <View style={{ flex: 1 }}>

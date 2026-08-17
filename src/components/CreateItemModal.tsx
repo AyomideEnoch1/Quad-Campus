@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, View, Text, TextInput, TouchableOpacity,
   StyleSheet, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
-import { Image } from 'expo-image';
+import QuadImage from './QuadImage';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS, RADIUS } from '../constants/theme';
@@ -115,7 +115,7 @@ export default function CreateItemModal({ visible, onClose, currentUser, current
             {/* Image Upload Area */}
             <TouchableOpacity onPress={pickImage} style={styles.imagePickerBox}>
               {selectedImage ? (
-                <Image source={{ uri: selectedImage }} style={styles.uploadedImg} />
+                <QuadImage uri={selectedImage } style={styles.uploadedImg} />
               ) : (
                 <View style={styles.placeholderBox}>
                   <Ionicons name="camera-outline" size={32} color={COLORS.primary} />

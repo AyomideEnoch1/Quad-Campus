@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
-import { Image } from 'expo-image';
+import QuadImage from './QuadImage';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import RoleBadge from './RoleBadge';
@@ -123,7 +123,7 @@ export default function GlobalSearchModal({ visible, onClose, posts = [], market
                 return (
                   <View style={styles.resultCard}>
                     <View style={styles.cardHeader}>
-                      <Image source={{ uri: item.avatarUrl }} style={styles.avatar} />
+                      <QuadImage uri={item.avatarUrl } style={styles.avatar} />
                       <View style={{ flex: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                           <Text style={styles.name}>{item.displayName}</Text>
@@ -142,7 +142,7 @@ export default function GlobalSearchModal({ visible, onClose, posts = [], market
                 return (
                   <View style={styles.resultCard}>
                     <View style={styles.cardHeader}>
-                      <Image source={{ uri: item.authorAvatar }} style={styles.avatar} />
+                      <QuadImage uri={item.authorAvatar } style={styles.avatar} />
                       <View style={{ flex: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                           <Text style={styles.name}>{item.authorName}</Text>
@@ -166,7 +166,7 @@ export default function GlobalSearchModal({ visible, onClose, posts = [], market
                     style={styles.resultCard}
                   >
                     <View style={styles.cardHeader}>
-                      <Image source={{ uri: item.imageUrl || item.image }} style={styles.itemThumb} />
+                      <QuadImage uri={item.imageUrl || item.image } style={styles.itemThumb} />
                       <View style={{ flex: 1 }}>
                         <Text style={styles.name}>{item.title}</Text>
                         <Text style={styles.price}>₦{item.price?.toLocaleString()}</Text>
@@ -187,7 +187,7 @@ export default function GlobalSearchModal({ visible, onClose, posts = [], market
                     style={styles.resultCard}
                   >
                     <View style={styles.cardHeader}>
-                      <Image source={{ uri: item.logoUrl || item.logo }} style={styles.avatar} />
+                      <QuadImage uri={item.logoUrl || item.logo } style={styles.avatar} />
                       <View style={{ flex: 1 }}>
                         <Text style={styles.name}>{item.name}</Text>
                         <Text style={styles.sub}>{item.tagline || 'Campus Club'} • {item.memberCount || 1} members</Text>

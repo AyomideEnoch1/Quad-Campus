@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity,
   KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
-import { Image } from 'expo-image';
+import QuadImage from './QuadImage';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeComments, addComment } from '../services/commentService';
@@ -53,7 +53,7 @@ export default function CommentsModal({ visible, onClose, post, currentUser }: a
 
   const renderComment = ({ item }) => (
     <View style={styles.commentRow}>
-      <Image source={{ uri: item.authorAvatar }} style={styles.commentAvatar} />
+      <QuadImage uri={item.authorAvatar } style={styles.commentAvatar} />
       <View style={styles.commentBubble}>
         <View style={styles.commentHeader}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>

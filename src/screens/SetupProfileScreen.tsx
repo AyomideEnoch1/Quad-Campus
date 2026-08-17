@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity,
   StyleSheet, ScrollView, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { Image } from 'expo-image';
+import QuadImage from '../components/QuadImage';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { BRAND } from '../constants/theme';
@@ -83,9 +83,7 @@ export default function SetupProfileScreen({ currentUser, onComplete }: any) {
         {/* Avatar Picker */}
         <View style={styles.avatarSection}>
           <TouchableOpacity onPress={pickAvatar} style={styles.avatarPicker} activeOpacity={0.8}>
-            <Image 
-              source={{ uri: avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' }} 
-              style={styles.avatarImg} 
+            <QuadImage uri={avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' } style={styles.avatarImg} 
             />
             <View style={styles.cameraIcon}>
               <Ionicons name="camera" size={16} color="#fff" />

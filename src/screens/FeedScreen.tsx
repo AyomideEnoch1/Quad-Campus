@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert, Share, Modal } from 'react-native';
-import { Image } from 'expo-image';
+import QuadImage from '../components/QuadImage';
 import { Video, ResizeMode } from 'expo-av';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
@@ -207,7 +207,7 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
         <View style={[styles.postCard, { borderColor: '#3B82C4', borderWidth: 1.5 }]}>
           {/* Header */}
           <View style={styles.authorRow}>
-            <Image source={{ uri: item.advertiserAvatar }} style={styles.avatar} />
+            <QuadImage uri={item.advertiserAvatar } style={styles.avatar} />
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                 <Text style={styles.authorName}>{item.advertiserName}</Text>
@@ -226,7 +226,7 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
 
           {/* Ad Creative Image */}
           {item.imageUrl && (
-            <Image source={{ uri: item.imageUrl }} style={styles.mediaImage} />
+            <QuadImage uri={item.imageUrl } style={styles.mediaImage} />
           )}
 
           {/* Ad CTA Bar */}
@@ -247,7 +247,7 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
       <View style={styles.postCard}>
         {/* Header */}
         <View style={styles.authorRow}>
-          <Image source={{ uri: avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' }} style={styles.avatar} />
+          <QuadImage uri={avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' } style={styles.avatar} />
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
               <Text style={styles.authorName}>{authorName}</Text>
@@ -276,7 +276,7 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
             isLooping
           />
         ) : (
-          <Image source={{ uri: item.mediaUrls[0] }} style={styles.mediaImage} contentFit="cover" transition={200} />
+          <QuadImage uri={item.mediaUrls[0] } style={styles.mediaImage} contentFit="cover" transition={200} />
         )
       )}
 
@@ -362,7 +362,7 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />}
           ListHeaderComponent={
             <TouchableOpacity onPress={() => setShowPostModal(true)} style={styles.composeCard}>
-              <Image source={{ uri: currentUser.avatarUrl }} style={{ width: 36, height: 36, borderRadius: 18 }} />
+              <QuadImage uri={currentUser.avatarUrl } style={{ width: 36, height: 36, borderRadius: 18 }} />
               <Text style={styles.composePlaceholder}>What's happening on campus?</Text>
               <Ionicons name="image-outline" size={20} color={COLORS.primary} />
             </TouchableOpacity>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView,
   TextInput, FlatList, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
-import { Image } from 'expo-image';
+import QuadImage from './QuadImage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
@@ -71,9 +71,7 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
     return (
       <View style={[styles.msgRow, isMe && styles.msgRowMe]}>
         {!isMe && (
-          <Image 
-            source={{ uri: item.senderAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' }} 
-            style={styles.msgAvatar} 
+          <QuadImage uri={item.senderAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' } style={styles.msgAvatar} 
           />
         )}
         <View style={[styles.msgBubble, isMe ? styles.msgBubbleMe : styles.msgBubbleOther]}>
@@ -84,7 +82,7 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
             </View>
           )}
           {item.mediaUrl && (
-            <Image source={{ uri: item.mediaUrl }} style={styles.msgMedia} resizeMode="cover" />
+            <QuadImage uri={item.mediaUrl } style={styles.msgMedia} resizeMode="cover" />
           )}
           {!!item.text && (
             <Text style={[styles.msgText, isMe && styles.msgTextMe]}>{item.text}</Text>
@@ -140,7 +138,7 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
               <TouchableOpacity onPress={() => setActiveTab('overview')} style={styles.backBtn} activeOpacity={0.7}>
                 <Ionicons name="arrow-back" size={22} color={COLORS.textMain} />
               </TouchableOpacity>
-              <Image source={{ uri: club.logoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' }} style={styles.chatHeaderAvatar} />
+              <QuadImage uri={club.logoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' } style={styles.chatHeaderAvatar} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.chatHeaderTitle} numberOfLines={1}>{club.name}</Text>
                 <Text style={styles.chatHeaderSub}>{club.memberCount || 1} members</Text>
@@ -212,14 +210,10 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             {/* Banner Image */}
             <View style={styles.heroBanner}>
-              <Image 
-                source={{ uri: club.bannerUrl || 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&fm=jpg&fit=crop&q=80' }} 
-                style={styles.bannerImg} 
+              <QuadImage uri={club.bannerUrl || 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&fm=jpg&fit=crop&q=80' } style={styles.bannerImg} 
               />
               <View style={styles.logoWrapper}>
-                <Image 
-                  source={{ uri: club.logoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' }} 
-                  style={styles.logoImg} 
+                <QuadImage uri={club.logoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' } style={styles.logoImg} 
                 />
               </View>
             </View>

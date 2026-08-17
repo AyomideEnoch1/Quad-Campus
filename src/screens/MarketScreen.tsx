@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ScrollView } from 'react-native';
-import { Image } from 'expo-image';
+import QuadImage from '../components/QuadImage';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeMarketplaceItems } from '../services/marketService';
@@ -44,7 +44,7 @@ export default function MarketScreen({ items: initialItems, currentUser, current
       onPress={() => setSelectedDetailItem(item)}
     >
       <View style={styles.imgContainer}>
-        <Image source={{ uri: item.imageUrl }} style={styles.itemImg} />
+        <QuadImage uri={item.imageUrl } style={styles.itemImg} />
         <View style={styles.pricePill}>
           <Text style={styles.priceText}>₦{typeof item.price === 'number' ? item.price.toLocaleString() : item.price}</Text>
         </View>
