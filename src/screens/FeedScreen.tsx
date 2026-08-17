@@ -239,15 +239,18 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
     }
 
     const isMe = item.authorId === currentUser?.uid;
-    const avatar = isMe ? (currentUser?.avatarUrl || item.authorAvatar) : item.authorAvatar;
+    const avatar = isMe ? (currentUser?.avatarUrl || item.authorAvatar) : (item.authorAvatar || item.avatarUrl);
     const authorName = isMe ? (currentUser?.displayName || item.authorName) : item.authorName;
     const authorUsername = isMe ? (currentUser?.username || item.authorUsername) : item.authorUsername;
+    const postMedia = (item.mediaUrls && item.mediaUrls.length > 0) 
+      ? item.mediaUrls[0] 
+      : (item.mediaUrl || item.imageUrl || null);
 
     return (
       <View style={styles.postCard}>
         {/* Header */}
         <View style={styles.authorRow}>
-          <QuadImage uri={avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' } style={styles.avatar} />
+          <QuadImage uri={avatar} fallbackIcon="person-circle" style={styles.avatar} />
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
               <Text style={styles.authorName}>{authorName}</Text>
@@ -266,17 +269,17 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
       <Text style={styles.content}>{item.content}</Text>
 
       {/* Media: Video or Image */}
-      {item.mediaUrls && item.mediaUrls.length > 0 && (
-        item.mediaType === 'video' || (typeof item.mediaUrls[0] === 'string' && (item.mediaUrls[0].includes('.mp4') || item.mediaUrls[0].includes('.mov') || item.mediaUrls[0].includes('.webm'))) ? (
+      {postMedia && (
+        item.mediaType === 'video' || (typeof postMedia === 'string' && (postMedia.includes('.mp4') || postMedia.includes('.mov') || postMedia.includes('.webm'))) ? (
           <Video
-            source={{ uri: item.mediaUrls[0] }}
+            source={{ uri: postMedia }}
             style={styles.mediaImage}
             useNativeControls
             resizeMode={ResizeMode.COVER}
             isLooping
           />
         ) : (
-          <QuadImage uri={item.mediaUrls[0] } style={styles.mediaImage} contentFit="cover" transition={200} />
+          <QuadImage uri={postMedia} fallbackIcon="image-outline" style={styles.mediaImage} contentFit="cover" />
         )
       )}
 

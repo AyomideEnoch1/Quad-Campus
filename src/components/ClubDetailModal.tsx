@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView,
   TextInput, FlatList, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import QuadImage from './QuadImage';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { toggleJoinClub, subscribeClubMessages, sendClubMessage } from '../services/clubService';
@@ -10,6 +10,8 @@ import RoleBadge from './RoleBadge';
 import { pickAndUploadImage } from '../utils/uploadImage';
 
 export default function ClubDetailModal({ visible, onClose, club, currentUser, onToggleJoin }: any) {
+  const insets = useSafeAreaInsets();
+  const bottomPadding = Math.max(insets.bottom, 12);
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'chat'
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState('');
@@ -166,7 +168,7 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
             />
 
             {/* Input Bar */}
-            <View style={styles.inputBar}>
+            <View style={[styles.inputBar, { paddingBottom: bottomPadding }]}>
               <TouchableOpacity onPress={handleAttachMedia} style={styles.attachBtn} activeOpacity={0.7}>
                 <Ionicons name="add" size={20} color={COLORS.primary} />
               </TouchableOpacity>

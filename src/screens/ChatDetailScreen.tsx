@@ -17,7 +17,12 @@ import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeChatMessages, sendMessage } from '../services/chatService';
 import { pickAndUploadImage } from '../utils/uploadImage';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 export default function ChatDetailScreen({ chatId, partner, currentUser, onBack }: any) {
+  const insets = useSafeAreaInsets();
+  const bottomPadding = Math.max(insets.bottom, 12);
+
   const [messages, setMessages] = useState<any[]>([]);
   const [inputText, setInputText] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -139,7 +144,7 @@ export default function ChatDetailScreen({ chatId, partner, currentUser, onBack 
         />
 
         {/* Input Footer Bar */}
-        <View style={styles.inputBar}>
+        <View style={[styles.inputBar, { paddingBottom: bottomPadding }]}>
           <TouchableOpacity
             onPress={handleAttachImage}
             disabled={uploadingImage}

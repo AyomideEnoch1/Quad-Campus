@@ -8,8 +8,11 @@ import * as ImagePicker from 'expo-image-picker';
 import { COLORS, RADIUS } from '../constants/theme';
 import { createPost } from '../services/feedService';
 import { uploadImage } from '../utils/uploadImage';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function CreatePostModal({ visible, onClose, currentUser, currentSchool }: any) {
+  const insets = useSafeAreaInsets();
+  const bottomPadding = Math.max(insets.bottom, 12);
   const [content, setContent] = useState('');
   const [scope, setScope] = useState('my_school'); // 'my_school' | 'all_schools'
   const [selectedMedia, setSelectedMedia] = useState(null); // { uri, type: 'image' | 'video' }
@@ -162,7 +165,7 @@ export default function CreatePostModal({ visible, onClose, currentUser, current
           )}
 
           {/* Action Toolbar */}
-          <View style={styles.toolbar}>
+          <View style={[styles.toolbar, { paddingBottom: bottomPadding }]}>
             <TouchableOpacity onPress={pickMedia} style={styles.toolBtn}>
               <Ionicons name="images-outline" size={22} color={COLORS.primary} />
               <Text style={styles.toolText}>Photo / Video</Text>
