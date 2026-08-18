@@ -102,6 +102,62 @@ export async function createNotificationEvent({ userId, title, message, type = '
   }
 }
 
+import { updateDoc, deleteDoc, getDocs, writeBatch } from 'firebase/firestore';
+
+export async function markNotificationRead(notifId: string): Promise<void> {
+  if (!notifId) return;
+  try {
+    const notifRef = doc(db, NOTIFS_COLLECTION, notifId);
+    await updateDoc(notifRef, {
+      read: true,
+      updatedAt: serverTimestamp()
+    });
+  } catch (err: any) {
+    console.warn("Error marking notification read:", err?.message || err);
+  }
+}
+
+export async function markAllNotificationsRead(userId: string): Promise<void> {
+  if (!userId) return;
+  try {
+    const q = query(
+      collection(db, NOTIFS_COLLECTION),
+      where('userId', '==', userId),
+      where('read', '==', false)
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) return;
+
+    const batch = writeBatch(db);
+    snap.docs.forEach(d => {
+      batch.update(d.ref, { read: true, updatedAt: serverTimestamp() });
+    });
+    await batch.commit();
+  } catch (err: any) {
+    console.warn("Error marking all notifications read:", err?.message || err);
+  }
+}
+
+export async function clearAllUserNotifications(userId: string): Promise<void> {
+  if (!userId) return;
+  try {
+    const q = query(
+      collection(db, NOTIFS_COLLECTION),
+      where('userId', '==', userId)
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) return;
+
+    const batch = writeBatch(db);
+    snap.docs.forEach(d => {
+      batch.delete(d.ref);
+    });
+    await batch.commit();
+  } catch (err: any) {
+    console.warn("Error clearing notifications:", err?.message || err);
+  }
+}
+
 function formatTimeAgo(date: Date): string {
   const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
   if (seconds < 60) return 'Just now';

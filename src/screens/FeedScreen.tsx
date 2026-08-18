@@ -17,7 +17,7 @@ import AdsReviewScreen from './AdsReviewScreen';
 import UserProfileModal from '../components/UserProfileModal';
 import { createNotificationEvent } from '../services/notificationService';
 
-export default function FeedScreen({ posts: initialPosts, currentSchool, currentUser, onOpenPostModal }: any) {
+export default function FeedScreen({ posts: initialPosts, currentSchool, currentUser, onOpenPostModal, onStartChat }: any) {
   const [feedScope, setFeedScope] = useState('my_school'); // 'my_school' | 'all_schools'
   const [posts, setPosts] = useState<any[]>(initialPosts || []);
   const [loading, setLoading] = useState(true);
@@ -431,6 +431,7 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
         onClose={() => setActiveCommentPost(null)}
         post={activeCommentPost}
         currentUser={currentUser}
+        onStartChat={onStartChat}
       />
 
       <UserProfileModal
@@ -439,6 +440,7 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
         userId={selectedAuthorUser?.uid}
         initialUserData={selectedAuthorUser}
         currentUser={currentUser}
+        onStartChat={onStartChat}
       />
 
       <AdComposerModal

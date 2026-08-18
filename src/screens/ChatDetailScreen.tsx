@@ -43,7 +43,7 @@ export default function ChatDetailScreen({ chatId, partner, currentUser, onBack 
     if (customText === undefined) setInputText('');
 
     try {
-      await sendMessage(chatId, currentUser.uid, textToSend || '📷 Photo attachment');
+      await sendMessage(chatId, currentUser.uid, textToSend, mediaUrl);
     } catch (err) {
       console.error("Error sending message:", err);
     }
@@ -54,7 +54,7 @@ export default function ChatDetailScreen({ chatId, partner, currentUser, onBack 
     try {
       const res = await pickAndUploadImage('chat_attachments');
       if (res?.url) {
-        await handleSend('📷 Photo attachment', res.url);
+        await handleSend('', res.url);
       }
     } catch (err) {
       console.warn("Error attaching chat photo:", err);

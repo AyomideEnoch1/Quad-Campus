@@ -6,7 +6,7 @@ import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { auth } from '../config/firebase';
 import { signOut } from 'firebase/auth';
-import { deleteUserAccount } from '../services/userService';
+import { deleteUserAccount, updateUserProfile } from '../services/userService';
 import EditProfileModal from '../components/EditProfileModal';
 import RoleBadge from '../components/RoleBadge';
 import AdComposerModal from '../components/AdComposerModal';
@@ -203,9 +203,16 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
                 return (
                   <TouchableOpacity
                     key={r.id}
-                    onPress={() => {
+                    onPress={async () => {
                       if (setCurrentUser) {
                         setCurrentUser(prev => ({ ...prev, role: r.id }));
+                      }
+                      if (currentUser?.uid) {
+                        try {
+                          await updateUserProfile(currentUser.uid, { role: r.id as any });
+                        } catch (err) {
+                          console.warn("Failed to persist role update:", err);
+                        }
                       }
                     }}
                     style={[styles.rolePill, isSelected && styles.rolePillActive]}

@@ -8,7 +8,7 @@ import { collection, query, getDocs, limit } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import UserProfileModal from './UserProfileModal';
 
-export default function GlobalSearchModal({ visible, onClose, posts = [], marketplaceItems = [], clubs = [], onSelectClub, onSelectListing, currentUser }: any) {
+export default function GlobalSearchModal({ visible, onClose, posts = [], marketplaceItems = [], clubs = [], onSelectClub, onSelectListing, currentUser, onStartChat }: any) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'users' | 'posts' | 'market' | 'clubs'
   const [usersList, setUsersList] = useState([]);
@@ -228,6 +228,11 @@ export default function GlobalSearchModal({ visible, onClose, posts = [], market
         userId={selectedSearchUser?.id || selectedSearchUser?.uid}
         initialUserData={selectedSearchUser}
         currentUser={currentUser}
+        onStartChat={(partner) => {
+          setSelectedSearchUser(null);
+          onClose();
+          if (onStartChat) onStartChat(partner);
+        }}
       />
     </Modal>
   );

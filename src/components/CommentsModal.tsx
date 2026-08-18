@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import UserProfileModal from './UserProfileModal';
 
-export default function CommentsModal({ visible, onClose, post, currentUser }: any) {
+export default function CommentsModal({ visible, onClose, post, currentUser, onStartChat }: any) {
   const insets = useSafeAreaInsets();
   const bottomPadding = Math.max(insets.bottom, 12);
 
@@ -153,6 +153,11 @@ export default function CommentsModal({ visible, onClose, post, currentUser }: a
         userId={selectedCommentAuthor?.uid}
         initialUserData={selectedCommentAuthor}
         currentUser={currentUser}
+        onStartChat={(partner) => {
+          setSelectedCommentAuthor(null);
+          onClose();
+          if (onStartChat) onStartChat(partner);
+        }}
       />
     </Modal>
   );

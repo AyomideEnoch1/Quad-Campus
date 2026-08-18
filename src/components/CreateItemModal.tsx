@@ -18,7 +18,15 @@ export default function CreateItemModal({ visible, onClose, currentUser, current
   const [selectedImage, setSelectedImage] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const categories = ['Textbooks', 'Tech', 'Dorm Gear', 'Tickets', 'Other'];
+  const categories = [
+    'Textbooks',
+    'Tech & Electronics',
+    'Dorm & Living',
+    'Fashion & Apparel',
+    'Tickets & Passes',
+    'Services & Tutoring',
+    'Other'
+  ];
   const conditions = ['New', 'Like New', 'Good', 'Fair'];
 
   const pickImage = async () => {
@@ -134,10 +142,10 @@ export default function CreateItemModal({ visible, onClose, currentUser, current
             />
 
             {/* Price */}
-            <Text style={styles.label}>Price ($ USD) *</Text>
+            <Text style={styles.label}>Price (₦ Naira) *</Text>
             <TextInput
               style={styles.input}
-              placeholder="0.00"
+              placeholder="0"
               keyboardType="decimal-pad"
               value={price}
               onChangeText={setPrice}

@@ -41,7 +41,13 @@ import { School, UserProfile, Post, MarketplaceItem, Club, Chat, NotificationIte
 
 import NotificationsModal from './src/components/NotificationsModal';
 import GlobalSearchModal from './src/components/GlobalSearchModal';
-import { INITIAL_NOTIFICATIONS, subscribeUserNotifications } from './src/services/notificationService';
+import {
+  INITIAL_NOTIFICATIONS,
+  subscribeUserNotifications,
+  markAllNotificationsRead,
+  clearAllUserNotifications,
+  markNotificationRead
+} from './src/services/notificationService';
 import { getOrCreateChat } from './src/services/chatService';
 
 const Tab = createBottomTabNavigator();
@@ -97,6 +103,23 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
+  const handleStartDirectChat = async (partner: any, nav?: any) => {
+    try {
+      const partnerObj = {
+        uid: partner.uid || `user_${Date.now()}`,
+        displayName: partner.displayName || partner.name || 'Student',
+        avatarUrl: partner.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80'
+      };
+      const chatId = await getOrCreateChat(currentUser, partnerObj);
+      setActiveChat({ id: chatId, partner: partnerObj });
+      if (nav) {
+        nav.navigate('Chat');
+      }
+    } catch (e) {
+      console.error("Error starting direct chat:", e);
+    }
+  };
+
   return (
     <NavigationContainer>
       <StatusBar style="dark" />
@@ -124,9 +147,18 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
         visible={showNotifications}
         onClose={() => setShowNotifications(false)}
         notifications={notifications}
-        onMarkAllRead={() => setNotifications(prev => prev.map(n => ({ ...n, read: true })))}
-        onClearAll={() => setNotifications([])}
-        onToggleRead={(id: string) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))}
+        onMarkAllRead={() => {
+          setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+          if (currentUser?.uid) markAllNotificationsRead(currentUser.uid);
+        }}
+        onClearAll={() => {
+          setNotifications([]);
+          if (currentUser?.uid) clearAllUserNotifications(currentUser.uid);
+        }}
+        onToggleRead={(id: string) => {
+          setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+          markNotificationRead(id);
+        }}
       />
 
       <GlobalSearchModal
@@ -136,6 +168,7 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
         marketplaceItems={items}
         clubs={clubs}
         currentUser={currentUser}
+        onStartChat={(partner: any) => handleStartDirectChat(partner)}
       />
 
       {/* Full-screen Profile View Modal */}
@@ -192,6 +225,7 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
               setPosts={setPosts}
               currentSchool={currentSchool}
               currentUser={currentUser}
+              onStartChat={(partner: any) => handleStartDirectChat(partner, props.navigation)}
             />
           )}
         </Tab.Screen>

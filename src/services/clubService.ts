@@ -150,15 +150,22 @@ export interface SendClubMessageParams {
   mediaUrl?: string;
 }
 
-export async function sendClubMessage(clubId: string, { senderId, senderName, senderAvatar, text }: SendClubMessageParams): Promise<void> {
-  if (!clubId || !text.trim()) return;
+export async function sendClubMessage(clubId: string, { senderId, senderName, senderAvatar, senderRole, text, mediaUrl }: SendClubMessageParams): Promise<void> {
+  if (!clubId || (!text.trim() && !mediaUrl)) return;
 
   const messagesRef = collection(db, 'clubs', clubId, 'messages');
-  await addDoc(messagesRef, {
+  const msgDoc: any = {
     senderId,
     senderName,
-    senderAvatar,
+    senderAvatar: senderAvatar || '',
+    senderRole: senderRole || 'student',
     text: text.trim(),
     createdAt: serverTimestamp()
-  });
+  };
+
+  if (mediaUrl) {
+    msgDoc.mediaUrl = mediaUrl;
+  }
+
+  await addDoc(messagesRef, msgDoc);
 }

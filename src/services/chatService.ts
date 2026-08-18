@@ -84,6 +84,9 @@ export function subscribeChatMessages(chatId: string, callback: (messages: Direc
     const messages = snapshot.docs.map(d => ({
       id: d.id,
       ...(d.data() as any),
+      time: d.data().createdAt?.toDate
+        ? d.data().createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : 'Just now',
       createdAt: d.data().createdAt?.toDate ? d.data().createdAt.toDate() : new Date()
     }));
     callback(messages as DirectChatMessage[]);
@@ -92,20 +95,26 @@ export function subscribeChatMessages(chatId: string, callback: (messages: Direc
 
 import { createNotificationEvent } from './notificationService';
 
-export async function sendMessage(chatId: string, senderUid: string, text: string): Promise<void> {
-  if (!text || text.trim().length === 0) return;
+export async function sendMessage(chatId: string, senderUid: string, text: string, mediaUrl?: string): Promise<void> {
+  if ((!text || text.trim().length === 0) && !mediaUrl) return;
 
   const messagesRef = collection(db, 'chats', chatId, 'messages');
   const chatRef = doc(db, 'chats', chatId);
 
-  await addDoc(messagesRef, {
+  const messageDoc: any = {
     senderUid,
-    text: text.trim(),
+    text: text ? text.trim() : (mediaUrl ? '📷 Photo attachment' : ''),
     createdAt: serverTimestamp()
-  });
+  };
+
+  if (mediaUrl) {
+    messageDoc.mediaUrl = mediaUrl;
+  }
+
+  await addDoc(messagesRef, messageDoc);
 
   await updateDoc(chatRef, {
-    lastMessage: text.trim(),
+    lastMessage: text && text.trim().length > 0 ? text.trim() : '📷 Photo attachment',
     lastMessageTime: serverTimestamp()
   });
 
@@ -119,7 +128,7 @@ export async function sendMessage(chatId: string, senderUid: string, text: strin
         await createNotificationEvent({
           userId: partnerUid,
           title: 'New Direct Message 📩',
-          message: text.trim(),
+          message: text && text.trim().length > 0 ? text.trim() : '📷 Sent a photo',
           type: 'message'
         });
       }
