@@ -15,12 +15,16 @@ export default function Navbar({
   currentUser,
   onOpenProfile
 }: any) {
-  const isSuperAdmin = currentUser?.role === 'super_admin' || currentUser?.roles?.includes('super_admin');
+  const isAdmin = currentUser?.role === 'super_admin' || 
+    currentUser?.roles?.includes('super_admin') || 
+    currentUser?.role === 'school_admin' || 
+    currentUser?.roles?.includes('school_admin') ||
+    currentUser?.email?.toLowerCase() === 'ayomidenoch15@gmail.com';
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        {/* Left Section: Profile Avatar (Left of Logo) + Logo + Campus Badge */}
+        {/* Left Section: Profile Avatar (Left of Logo) + Logo + Campus Badge (Admins Only) */}
         <View style={styles.leftSection}>
           {/* Profile Avatar Button */}
           <TouchableOpacity 
@@ -37,21 +41,16 @@ export default function Navbar({
 
           <QuadLogo height={24} showText={true} />
 
-          {isSuperAdmin ? (
+          {isAdmin && (
             <TouchableOpacity 
               onPress={onOpenSchoolPicker} 
               style={styles.schoolPill}
               activeOpacity={0.7}
             >
               <Ionicons name="school-outline" size={14} color={COLORS.primary} />
-              <Text style={styles.schoolText} numberOfLines={1}>{currentSchool.shortName}</Text>
+              <Text style={styles.schoolText} numberOfLines={1}>{currentSchool?.shortName || 'Campus'}</Text>
               <Feather name="chevron-down" size={14} color={COLORS.textMuted} />
             </TouchableOpacity>
-          ) : (
-            <View style={styles.schoolPillStatic}>
-              <Ionicons name="school-outline" size={14} color={COLORS.primary} />
-              <Text style={styles.schoolText} numberOfLines={1}>{currentSchool.shortName}</Text>
-            </View>
           )}
 
           <TouchableOpacity 

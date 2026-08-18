@@ -13,22 +13,31 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
   const insets = useSafeAreaInsets();
   const bottomPadding = Math.max(insets.bottom, 12);
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'chat'
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [messageText, setMessageText] = useState('');
   const [sending, setSending] = useState(false);
-  const flatListRef = useRef(null);
+  const [isJoined, setIsJoined] = useState(!!club?.isJoined);
+  const flatListRef = useRef<any>(null);
 
   useEffect(() => {
-    if (!club?.id || !visible || activeTab !== 'chat') return;
+    setIsJoined(!!club?.isJoined);
+  }, [club?.isJoined]);
+
+  useEffect(() => {
+    if (!club?.id || !visible) return;
     const unsub = subscribeClubMessages(club.id, (liveMsgs) => {
       setMessages(liveMsgs);
     });
     return unsub;
-  }, [club?.id, visible, activeTab]);
+  }, [club?.id, visible]);
 
   if (!club) return null;
 
-  const isJoined = !!club.isJoined;
+  const handleToggleJoin = () => {
+    const nextState = !isJoined;
+    setIsJoined(nextState);
+    if (onToggleJoin) onToggleJoin(club);
+  };
 
   const handleSendMessage = async () => {
     if (!messageText.trim() || sending) return;
@@ -38,9 +47,10 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
 
     try {
       await sendClubMessage(club.id, {
-        senderId: currentUser.uid,
-        senderName: currentUser.displayName || 'Student',
-        senderAvatar: currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80',
+        senderId: currentUser?.uid || 'usr_me',
+        senderName: currentUser?.displayName || 'Student',
+        senderAvatar: currentUser?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80',
+        senderRole: currentUser?.role || 'student',
         text: textToSend
       });
     } catch (err) {
@@ -55,10 +65,10 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
       const res = await pickAndUploadImage('club_chats');
       if (res?.url) {
         await sendClubMessage(club.id, {
-          senderId: currentUser.uid,
-          senderName: currentUser.displayName || 'Student',
-          senderAvatar: currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80',
-          senderRole: currentUser.role || 'student',
+          senderId: currentUser?.uid || 'usr_me',
+          senderName: currentUser?.displayName || 'Student',
+          senderAvatar: currentUser?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80',
+          senderRole: currentUser?.role || 'student',
           mediaUrl: res.url,
           text: ''
         });
@@ -199,7 +209,7 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
               This group chat is exclusive to members of {club.name}. Join the club to view and participate in discussions!
             </Text>
             <TouchableOpacity 
-              onPress={() => onToggleJoin(club)}
+              onPress={handleToggleJoin}
               style={styles.joinCta}
               activeOpacity={0.85}
             >
@@ -238,7 +248,7 @@ export default function ClubDetailModal({ visible, onClose, club, currentUser, o
 
               {/* Join Button */}
               <TouchableOpacity 
-                onPress={() => onToggleJoin(club)}
+                onPress={handleToggleJoin}
                 style={[styles.joinCta, isJoined && styles.joinedCta]}
                 activeOpacity={0.85}
               >

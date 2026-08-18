@@ -6,7 +6,7 @@ import QuadImage from './QuadImage';
 import RoleBadge from './RoleBadge';
 import { COLORS, RADIUS } from '../constants/theme';
 import { UserProfile } from '../types';
-import { getUser, checkIfFollowing, toggleFollowUser, checkIfProfileLiked, toggleLikeUserProfile } from '../services/userService';
+import { getUser, subscribeUserProfile, checkIfFollowing, toggleFollowUser, checkIfProfileLiked, toggleLikeUserProfile } from '../services/userService';
 import { createNotificationEvent } from '../services/notificationService';
 
 interface UserProfileModalProps {
@@ -42,44 +42,35 @@ export default function UserProfileModal({
   useEffect(() => {
     if (!visible || !targetUid) return;
 
-    // Reset with initial data first
     if (initialUserData) {
       setUser(initialUserData);
     }
 
-    let isMounted = true;
     setLoading(true);
 
-    async function loadData() {
-      try {
-        const liveUser = await getUser(targetUid);
-        if (liveUser && isMounted) {
-          setUser(liveUser);
-        }
-
-        if (!isMe && currentUser?.uid) {
-          const [followingStatus, likedStatus] = await Promise.all([
-            checkIfFollowing(currentUser.uid, targetUid),
-            checkIfProfileLiked(currentUser.uid, targetUid),
-          ]);
-          if (isMounted) {
-            setIsFollowing(followingStatus);
-            setIsLiked(likedStatus);
-          }
-        }
-      } catch (err) {
-        console.error("Error loading user profile:", err);
-      } finally {
-        if (isMounted) setLoading(false);
+    const unsub = subscribeUserProfile(targetUid, (liveUser) => {
+      if (liveUser) {
+        setUser((prev: any) => ({ ...prev, ...liveUser }));
       }
+      setLoading(false);
+    });
+
+    if (!isMe && currentUser?.uid) {
+      Promise.all([
+        checkIfFollowing(currentUser.uid, targetUid),
+        checkIfProfileLiked(currentUser.uid, targetUid),
+      ]).then(([followingStatus, likedStatus]) => {
+        setIsFollowing(followingStatus);
+        setIsLiked(likedStatus);
+      }).catch((err) => {
+        console.warn("Status check notice:", err);
+      });
     }
 
-    loadData();
-
     return () => {
-      isMounted = false;
+      unsub();
     };
-  }, [visible, targetUid]);
+  }, [visible, targetUid, currentUser?.uid]);
 
   const handleToggleFollow = async () => {
     if (!currentUser?.uid || !targetUid || isMe || followLoading) return;

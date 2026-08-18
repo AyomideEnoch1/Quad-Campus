@@ -1,4 +1,4 @@
-import { db } from '../config/firebase';
+import { db, auth } from '../config/firebase';
 import {
   collection,
   doc,
@@ -8,7 +8,7 @@ import {
   updateDoc,
   query,
   where,
-  orderBy,
+  limit,
   onSnapshot,
   serverTimestamp,
   Unsubscribe
@@ -77,19 +77,24 @@ export function subscribeUserChats(userUid: string, callback: (chats: Chat[]) =>
 export function subscribeChatMessages(chatId: string, callback: (messages: DirectChatMessage[]) => void): Unsubscribe {
   const q = query(
     collection(db, 'chats', chatId, 'messages'),
-    orderBy('createdAt', 'asc')
+    limit(100)
   );
 
   return onSnapshot(q, (snapshot) => {
-    const messages = snapshot.docs.map(d => ({
-      id: d.id,
-      ...(d.data() as any),
-      time: d.data().createdAt?.toDate
-        ? d.data().createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        : 'Just now',
-      createdAt: d.data().createdAt?.toDate ? d.data().createdAt.toDate() : new Date()
-    }));
-    callback(messages as DirectChatMessage[]);
+    const messages = snapshot.docs.map(d => {
+      const data = d.data() as any;
+      return {
+        id: d.id,
+        ...data,
+        time: data.createdAt?.toDate
+          ? data.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : 'Just now',
+        _rawDate: data.createdAt?.toDate ? data.createdAt.toDate() : new Date()
+      };
+    }).sort((a, b) => a._rawDate.getTime() - b._rawDate.getTime());
+    callback(messages as unknown as DirectChatMessage[]);
+  }, (err) => {
+    console.warn("Direct chat messages subscription error:", err);
   });
 }
 
@@ -102,7 +107,7 @@ export async function sendMessage(chatId: string, senderUid: string, text: strin
   const chatRef = doc(db, 'chats', chatId);
 
   const messageDoc: any = {
-    senderUid,
+    senderUid: senderUid || auth.currentUser?.uid || 'usr_me',
     text: text ? text.trim() : (mediaUrl ? '📷 Photo attachment' : ''),
     createdAt: serverTimestamp()
   };
@@ -113,10 +118,10 @@ export async function sendMessage(chatId: string, senderUid: string, text: strin
 
   await addDoc(messagesRef, messageDoc);
 
-  await updateDoc(chatRef, {
+  await setDoc(chatRef, {
     lastMessage: text && text.trim().length > 0 ? text.trim() : '📷 Photo attachment',
     lastMessageTime: serverTimestamp()
-  });
+  }, { merge: true });
 
   try {
     const chatSnap = await getDoc(chatRef);

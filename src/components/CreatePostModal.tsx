@@ -9,6 +9,7 @@ import { COLORS, RADIUS } from '../constants/theme';
 import { createPost } from '../services/feedService';
 import { uploadImage } from '../utils/uploadImage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { auth } from '../config/firebase';
 
 export default function CreatePostModal({ visible, onClose, currentUser, currentSchool }: any) {
   const insets = useSafeAreaInsets();
@@ -51,17 +52,25 @@ export default function CreatePostModal({ visible, onClose, currentUser, current
     try {
       let uploadedMediaUrl = null;
       if (selectedMedia) {
-        uploadedMediaUrl = await uploadImage(selectedMedia.uri, 'posts', selectedMedia.type);
+        try {
+          uploadedMediaUrl = await uploadImage(selectedMedia.uri, 'posts', selectedMedia.type);
+        } catch (imgErr: any) {
+          console.warn("Image upload notice:", imgErr);
+        }
       }
 
+      const authorId = currentUser?.uid || auth.currentUser?.uid || 'usr_anonymous';
+      const authorSchoolId = currentSchool?.id || currentUser?.schoolId || 'unilag';
+      const authorSchoolName = currentSchool?.name || currentUser?.schoolName || 'University of Lagos';
+
       await createPost({
-        authorId: currentUser.uid,
-        authorName: currentUser.displayName || 'Student',
-        authorUsername: currentUser.username || 'student',
-        authorAvatar: currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80',
-        authorSchoolId: currentSchool.id,
-        authorSchoolName: currentSchool.name,
-        isVerifiedAuthor: !!currentUser.isVerifiedSchool,
+        authorId,
+        authorName: currentUser?.displayName || 'Student',
+        authorUsername: currentUser?.username || 'student',
+        authorAvatar: currentUser?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80',
+        authorSchoolId,
+        authorSchoolName,
+        isVerifiedAuthor: !!currentUser?.isVerifiedSchool,
         content: content.trim(),
         mediaUrls: uploadedMediaUrl ? [uploadedMediaUrl] : [],
         mediaType: selectedMedia ? selectedMedia.type : null,
@@ -71,9 +80,9 @@ export default function CreatePostModal({ visible, onClose, currentUser, current
       setContent('');
       setSelectedMedia(null);
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error creating post:", err);
-      Alert.alert('Error', 'Failed to publish post. Please try again.');
+      Alert.alert('Error', err?.message || 'Failed to publish post. Please check your internet connection.');
     } finally {
       setSubmitting(false);
     }

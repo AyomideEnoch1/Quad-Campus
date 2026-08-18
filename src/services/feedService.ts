@@ -39,11 +39,11 @@ export function subscribeFeedPosts(schoolId: string | null, callback: (posts: Po
       })
       .filter(p => {
         if (schoolId) {
-          return p.authorSchoolId === schoolId;
+          return p.authorSchoolId === schoolId || p.scope === 'all_schools';
         }
         return true;
       })
-      .sort((a, b) => b._rawDate.getTime() - a._rawDate.getTime());
+      .sort((a, b) => (b._rawDate?.getTime() || 0) - (a._rawDate?.getTime() || 0));
 
     callback(posts as Post[]);
   }, (err) => {

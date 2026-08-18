@@ -10,10 +10,26 @@ import {
   getDocs,
   serverTimestamp,
   increment,
-  writeBatch
+  writeBatch,
+  onSnapshot,
+  Unsubscribe
 } from 'firebase/firestore';
 import { deleteUser, signOut } from 'firebase/auth';
 import { UserProfile } from '../types';
+
+export function subscribeUserProfile(uid: string, callback: (user: UserProfile | null) => void): Unsubscribe {
+  if (!uid) return () => {};
+  const userRef = doc(db, 'users', uid);
+  return onSnapshot(userRef, (snap) => {
+    if (snap.exists()) {
+      callback({ uid: snap.id, ...(snap.data() as any) } as UserProfile);
+    } else {
+      callback(null);
+    }
+  }, (err) => {
+    console.warn("User profile subscription error:", err);
+  });
+}
 
 export async function getUser(uid: string): Promise<UserProfile | null> {
   if (!uid) return null;

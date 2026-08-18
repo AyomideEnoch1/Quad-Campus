@@ -49,6 +49,7 @@ import {
   markNotificationRead
 } from './src/services/notificationService';
 import { getOrCreateChat } from './src/services/chatService';
+import { subscribeUserProfile } from './src/services/userService';
 
 const Tab = createBottomTabNavigator();
 
@@ -75,6 +76,17 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
   const [showSearch, setShowSearch] = useState<boolean>(false);
   const [showProfile, setShowProfile] = useState<boolean>(false);
+
+  // Subscribe to live user profile stats (followers, following, likes) in real time
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    const unsubUser = subscribeUserProfile(currentUser.uid, (liveUser) => {
+      if (liveUser) {
+        setCurrentUser(prev => ({ ...prev, ...liveUser }));
+      }
+    });
+    return unsubUser;
+  }, [currentUser?.uid]);
 
   useEffect(() => {
     if (!currentUser?.uid) return;

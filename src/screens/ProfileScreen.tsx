@@ -179,7 +179,9 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
 
           <View style={styles.statItem}>
             <Text style={[styles.statNum, { color: COLORS.primary }]}>
-              {((currentUser.likesReceived || 0) / 1000).toFixed(1)}k
+              {currentUser.likesReceived >= 1000 
+                ? `${(currentUser.likesReceived / 1000).toFixed(1)}k` 
+                : (currentUser.likesReceived || 0)}
             </Text>
             <Text style={styles.statLabel}>Likes</Text>
           </View>
