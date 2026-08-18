@@ -2,16 +2,39 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, SafeAreaView } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import QuadLogo from './QuadLogo';
+import QuadImage from './QuadImage';
 import { COLORS, RADIUS } from '../constants/theme';
 
-export default function Navbar({ currentSchool, onOpenSchoolPicker, unreadNotifications, onOpenSearch, onOpenNotifications, onOpenVerification, currentUser }: any) {
+export default function Navbar({ 
+  currentSchool, 
+  onOpenSchoolPicker, 
+  unreadNotifications, 
+  onOpenSearch, 
+  onOpenNotifications, 
+  onOpenVerification, 
+  currentUser,
+  onOpenProfile
+}: any) {
   const isSuperAdmin = currentUser?.role === 'super_admin' || currentUser?.roles?.includes('super_admin');
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        {/* Logo & Campus Button */}
+        {/* Left Section: Profile Avatar (Left of Logo) + Logo + Campus Badge */}
         <View style={styles.leftSection}>
+          {/* Profile Avatar Button */}
+          <TouchableOpacity 
+            onPress={onOpenProfile} 
+            style={styles.profileBtn}
+            activeOpacity={0.8}
+          >
+            <QuadImage 
+              uri={currentUser?.avatarUrl} 
+              fallbackIcon="person-circle" 
+              style={styles.profileAvatar} 
+            />
+          </TouchableOpacity>
+
           <QuadLogo height={24} showText={true} />
 
           {isSuperAdmin ? (
@@ -77,36 +100,56 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     backgroundColor: COLORS.bgCard,
   },
   leftSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
+    flexShrink: 1,
+  },
+  profileBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: COLORS.primary,
+    overflow: 'hidden',
+    backgroundColor: COLORS.bgInput,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 2,
+  },
+  profileAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
   },
   rightSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   schoolPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     backgroundColor: COLORS.bgInput,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: RADIUS.full,
+    maxWidth: 90,
   },
   schoolPillStatic: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     backgroundColor: COLORS.bgInput,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: RADIUS.full,
+    maxWidth: 90,
   },
   schoolText: {
     fontSize: 12,
@@ -118,7 +161,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 2,
     backgroundColor: COLORS.primaryLight,
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     paddingVertical: 4,
     borderRadius: RADIUS.full,
   },

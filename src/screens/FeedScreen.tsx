@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert, Share, Modal } from 'react-native';
-import { Image } from 'expo-image';
+import QuadImage from '../components/QuadImage';
 import { Video, ResizeMode } from 'expo-av';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
@@ -14,6 +14,7 @@ import EmptyState from '../components/EmptyState';
 import RoleBadge from '../components/RoleBadge';
 import AdComposerModal from '../components/AdComposerModal';
 import AdsReviewScreen from './AdsReviewScreen';
+import UserProfileModal from '../components/UserProfileModal';
 import { createNotificationEvent } from '../services/notificationService';
 
 export default function FeedScreen({ posts: initialPosts, currentSchool, currentUser, onOpenPostModal }: any) {
@@ -23,6 +24,7 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
   const [refreshing, setRefreshing] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
   const [activeCommentPost, setActiveCommentPost] = useState(null);
+  const [selectedAuthorUser, setSelectedAuthorUser] = useState<any>(null);
 
   const handleBroadcastToAllCampuses = (post) => {
     Alert.alert(
@@ -53,13 +55,23 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
 
   useEffect(() => {
     setLoading(true);
-    const schoolIdFilter = feedScope === 'my_school' ? currentSchool.id : null;
+    const safetyTimer = setTimeout(() => setLoading(false), 2500);
+
+    const schoolIdFilter = feedScope === 'my_school' ? (currentSchool?.id || null) : null;
     const unsubFeed = subscribeFeedPosts(schoolIdFilter, (livePosts) => {
-      if (livePosts) {
+      clearTimeout(safetyTimer);
+      if (livePosts && livePosts.length > 0) {
         setPosts(livePosts.map(p => ({
           ...p,
           isLiked: p.likedBy?.includes(currentUser?.uid)
         })));
+      } else if (initialPosts && initialPosts.length > 0) {
+        setPosts(initialPosts.map((p: any) => ({
+          ...p,
+          isLiked: p.likedBy?.includes(currentUser?.uid)
+        })));
+      } else {
+        setPosts([]);
       }
       setLoading(false);
     });
@@ -74,10 +86,11 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
     });
 
     return () => {
+      clearTimeout(safetyTimer);
       unsubFeed();
       unsubAds();
     };
-  }, [feedScope, currentSchool.id, currentUser?.uid]);
+  }, [feedScope, currentSchool?.id, currentUser?.uid]);
 
   // Interleave sponsored ads every 8th post
   const combinedFeedData = React.useMemo(() => {
@@ -207,7 +220,7 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
         <View style={[styles.postCard, { borderColor: '#3B82C4', borderWidth: 1.5 }]}>
           {/* Header */}
           <View style={styles.authorRow}>
-            <Image source={{ uri: item.advertiserAvatar }} style={styles.avatar} />
+            <QuadImage uri={item.advertiserAvatar } style={styles.avatar} />
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                 <Text style={styles.authorName}>{item.advertiserName}</Text>
@@ -226,7 +239,7 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
 
           {/* Ad Creative Image */}
           {item.imageUrl && (
-            <Image source={{ uri: item.imageUrl }} style={styles.mediaImage} />
+            <QuadImage uri={item.imageUrl } style={styles.mediaImage} />
           )}
 
           {/* Ad CTA Bar */}
@@ -239,22 +252,49 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
     }
 
     const isMe = item.authorId === currentUser?.uid;
-    const avatar = isMe ? (currentUser?.avatarUrl || item.authorAvatar) : item.authorAvatar;
+    const avatar = isMe ? (currentUser?.avatarUrl || item.authorAvatar) : (item.authorAvatar || item.avatarUrl);
     const authorName = isMe ? (currentUser?.displayName || item.authorName) : item.authorName;
     const authorUsername = isMe ? (currentUser?.username || item.authorUsername) : item.authorUsername;
+    const postMedia = (item.mediaUrls && item.mediaUrls.length > 0) 
+      ? item.mediaUrls[0] 
+      : (item.mediaUrl || item.imageUrl || null);
 
     return (
       <View style={styles.postCard}>
         {/* Header */}
         <View style={styles.authorRow}>
-          <Image source={{ uri: avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' }} style={styles.avatar} />
-          <View style={{ flex: 1 }}>
+          <TouchableOpacity 
+            onPress={() => setSelectedAuthorUser({
+              uid: item.authorId,
+              displayName: authorName,
+              username: authorUsername,
+              avatarUrl: avatar,
+              schoolName: item.authorSchoolName,
+              role: item.authorRole || 'student',
+            })}
+            activeOpacity={0.7}
+          >
+            <QuadImage uri={avatar} fallbackIcon="person-circle" style={styles.avatar} />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            onPress={() => setSelectedAuthorUser({
+              uid: item.authorId,
+              displayName: authorName,
+              username: authorUsername,
+              avatarUrl: avatar,
+              schoolName: item.authorSchoolName,
+              role: item.authorRole || 'student',
+            })}
+            style={{ flex: 1 }}
+            activeOpacity={0.7}
+          >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
               <Text style={styles.authorName}>{authorName}</Text>
               <RoleBadge role={item.authorRole || 'student'} size={15} />
             </View>
             <Text style={styles.authorSub}>@{authorUsername} • {item.authorSchoolName}</Text>
-          </View>
+          </TouchableOpacity>
           <Text style={styles.timeText}>{item.createdAt}</Text>
 
           <TouchableOpacity onPress={() => setMenuPost(item)} style={styles.morePostBtn}>
@@ -266,17 +306,17 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
       <Text style={styles.content}>{item.content}</Text>
 
       {/* Media: Video or Image */}
-      {item.mediaUrls && item.mediaUrls.length > 0 && (
-        item.mediaType === 'video' || (typeof item.mediaUrls[0] === 'string' && (item.mediaUrls[0].includes('.mp4') || item.mediaUrls[0].includes('.mov') || item.mediaUrls[0].includes('.webm'))) ? (
+      {postMedia && (
+        item.mediaType === 'video' || (typeof postMedia === 'string' && (postMedia.includes('.mp4') || postMedia.includes('.mov') || postMedia.includes('.webm'))) ? (
           <Video
-            source={{ uri: item.mediaUrls[0] }}
+            source={{ uri: postMedia }}
             style={styles.mediaImage}
             useNativeControls
             resizeMode={ResizeMode.COVER}
             isLooping
           />
         ) : (
-          <Image source={{ uri: item.mediaUrls[0] }} style={styles.mediaImage} contentFit="cover" transition={200} />
+          <QuadImage uri={postMedia} fallbackIcon="image-outline" style={styles.mediaImage} contentFit="cover" />
         )
       )}
 
@@ -362,7 +402,7 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />}
           ListHeaderComponent={
             <TouchableOpacity onPress={() => setShowPostModal(true)} style={styles.composeCard}>
-              <Image source={{ uri: currentUser.avatarUrl }} style={{ width: 36, height: 36, borderRadius: 18 }} />
+              <QuadImage uri={currentUser.avatarUrl } style={{ width: 36, height: 36, borderRadius: 18 }} />
               <Text style={styles.composePlaceholder}>What's happening on campus?</Text>
               <Ionicons name="image-outline" size={20} color={COLORS.primary} />
             </TouchableOpacity>
@@ -390,6 +430,14 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
         visible={!!activeCommentPost}
         onClose={() => setActiveCommentPost(null)}
         post={activeCommentPost}
+        currentUser={currentUser}
+      />
+
+      <UserProfileModal
+        visible={!!selectedAuthorUser}
+        onClose={() => setSelectedAuthorUser(null)}
+        userId={selectedAuthorUser?.uid}
+        initialUserData={selectedAuthorUser}
         currentUser={currentUser}
       />
 

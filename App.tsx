@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import * as Updates from 'expo-updates';
+import * as Notifications from 'expo-notifications';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Feather } from '@expo/vector-icons';
-import { useSafeAreaInsets, SafeAreaProvider } from 'react-native-safe-area-context';
+import { Modal } from 'react-native';
+import { useSafeAreaInsets, SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { auth, db } from './src/config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -65,12 +68,28 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
   const [showSchoolPicker, setShowSchoolPicker] = useState<boolean>(false);
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
   const [showSearch, setShowSearch] = useState<boolean>(false);
+  const [showProfile, setShowProfile] = useState<boolean>(false);
 
   useEffect(() => {
     if (!currentUser?.uid) return;
+    let seenIds = new Set<string>();
+
     const unsub = subscribeUserNotifications(currentUser.uid, (liveNotifs) => {
       if (liveNotifs && liveNotifs.length > 0) {
         setNotifications(liveNotifs);
+
+        const brandNew = liveNotifs.find(n => !n.read && !seenIds.has(n.id));
+        if (brandNew && seenIds.size > 0) {
+          Notifications.scheduleNotificationAsync({
+            content: {
+              title: brandNew.title,
+              body: brandNew.message,
+              sound: 'default',
+            },
+            trigger: null,
+          });
+        }
+        seenIds = new Set(liveNotifs.map(n => n.id));
       }
     });
     return unsub;
@@ -88,6 +107,7 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
         unreadNotifications={unreadCount}
         onOpenSearch={() => setShowSearch(true)}
         onOpenNotifications={() => setShowNotifications(true)}
+        onOpenProfile={() => setShowProfile(true)}
         onOpenVerification={() =>
           setCurrentUser({ ...currentUser, isVerifiedSchool: true })
         }
@@ -115,7 +135,31 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
         posts={posts}
         marketplaceItems={items}
         clubs={clubs}
+        currentUser={currentUser}
       />
+
+      {/* Full-screen Profile View Modal */}
+      <Modal
+        visible={showProfile}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setShowProfile(false)}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.bgCard }} edges={['top', 'bottom']}>
+          <ProfileScreen
+            currentUser={currentUser}
+            setCurrentUser={setCurrentUser}
+            onClose={() => setShowProfile(false)}
+            onSignOut={() => {
+              setShowProfile(false);
+              onSignOut();
+            }}
+            onOpenVerification={() =>
+              setCurrentUser({ ...currentUser, isVerifiedSchool: true })
+            }
+          />
+        </SafeAreaView>
+      </Modal>
 
       <Tab.Navigator
         screenOptions={({ route }) => ({
@@ -135,7 +179,6 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
               Market: 'shopping-bag',
               Chat: 'message-square',
               Clubs: 'users',
-              Profile: 'user',
             };
             return <Feather name={icons[route.name]} size={20} color={color} />;
           },
@@ -196,20 +239,6 @@ function MainApp({ currentSchool, setCurrentSchool, currentUser, setCurrentUser,
             <ClubsScreen {...props} clubs={clubs} setClubs={setClubs} currentUser={currentUser} currentSchool={currentSchool} />
           )}
         </Tab.Screen>
-
-        <Tab.Screen name="Profile">
-          {(props: any) => (
-            <ProfileScreen
-              {...props}
-              currentUser={currentUser}
-              setCurrentUser={setCurrentUser}
-              onSignOut={onSignOut}
-              onOpenVerification={() =>
-                setCurrentUser({ ...currentUser, isVerifiedSchool: true })
-              }
-            />
-          )}
-        </Tab.Screen>
       </Tab.Navigator>
     </NavigationContainer>
   );
@@ -219,6 +248,22 @@ export default function App() {
   const [flow, setFlow] = useState<'splash' | 'auth' | 'interests' | 'setup_profile' | 'main'>('splash');
   const [currentSchool, setCurrentSchool] = useState<School>(SCHOOLS[0]);
   const [currentUser, setCurrentUser] = useState<UserProfile>(CURRENT_USER);
+
+  useEffect(() => {
+    async function checkUpdates() {
+      try {
+        if (__DEV__) return;
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync();
+          await Updates.reloadAsync();
+        }
+      } catch (e) {
+        // Silently ignore if offline or development
+      }
+    }
+    checkUpdates();
+  }, []);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {

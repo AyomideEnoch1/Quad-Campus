@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, TextInput, ActivityIndicator, useWindowDimensions } from 'react-native';
-import { Image } from 'expo-image';
+import QuadImage from './QuadImage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
@@ -126,9 +126,7 @@ export default function ItemDetailModal({
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Large Responsive Hero Image */}
           <View style={[styles.heroImageContainer, { height: heroHeight }]}>
-            <Image 
-              source={{ uri: item.imageUrl || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&fm=jpg&fit=crop&q=80' }} 
-              style={styles.heroImage} 
+            <QuadImage uri={item.imageUrl || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&fm=jpg&fit=crop&q=80' } style={styles.heroImage} 
             />
             <View style={styles.conditionBadge}>
               <Text style={styles.conditionText}>{item.condition}</Text>
@@ -201,9 +199,7 @@ export default function ItemDetailModal({
                 style={styles.sellerCard}
                 activeOpacity={0.85}
               >
-                <Image 
-                  source={{ uri: item.sellerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' }} 
-                  style={styles.sellerAvatar} 
+                <QuadImage uri={item.sellerAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' } style={styles.sellerAvatar} 
                 />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.sellerName} numberOfLines={1}>{item.sellerName}</Text>

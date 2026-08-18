@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import { Image } from 'expo-image';
+import QuadImage from '../components/QuadImage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
@@ -93,7 +93,7 @@ export default function AdsReviewScreen({ visible, onClose, currentUser }: any) 
     <View style={styles.adCard}>
       {/* Header */}
       <View style={styles.advertiserHeader}>
-        <Image source={{ uri: item.advertiserAvatar }} style={styles.avatar} />
+        <QuadImage uri={item.advertiserAvatar } style={styles.avatar} />
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <Text style={styles.advertiserName}>{item.advertiserName}</Text>
@@ -108,7 +108,7 @@ export default function AdsReviewScreen({ visible, onClose, currentUser }: any) 
 
       {/* Ad Image */}
       {item.imageUrl && (
-        <Image source={{ uri: item.imageUrl }} style={styles.adImage} />
+        <QuadImage uri={item.imageUrl } style={styles.adImage} />
       )}
 
       {/* Headline & Link */}

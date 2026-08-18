@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView } from 'react-native';
-import { Image } from 'expo-image';
+import QuadImage from './QuadImage';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import RoleBadge from './RoleBadge';
@@ -25,7 +25,7 @@ export default function VendorStorefrontModal({ visible, onClose, seller, items 
         if (onSelectListing) onSelectListing(item);
       }}
     >
-      <Image source={{ uri: item.imageUrl || item.image }} style={styles.cardImage} />
+      <QuadImage uri={item.imageUrl || item.image } style={styles.cardImage} />
       <View style={styles.cardContent}>
         <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>
         <Text style={styles.itemPrice}>₦{item.price?.toLocaleString()}</Text>
@@ -55,7 +55,7 @@ export default function VendorStorefrontModal({ visible, onClose, seller, items 
 
         {/* Vendor Header Hero Card */}
         <View style={styles.vendorHero}>
-          <Image source={{ uri: sellerAvatar }} style={styles.vendorAvatar} />
+          <QuadImage uri={sellerAvatar } style={styles.vendorAvatar} />
           <View style={{ flex: 1, gap: 3 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Text style={styles.vendorName}>{sellerName}</Text>

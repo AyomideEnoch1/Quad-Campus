@@ -45,6 +45,7 @@ export function subscribeMarketplaceItems(category: string, callback: (items: Ma
     callback(items as MarketplaceItem[]);
   }, (err) => {
     console.warn("Marketplace subscription notice:", err?.message || err);
+    callback([]);
   });
 }
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Modal, View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
-import { Image } from 'expo-image';
+import QuadImage from './QuadImage';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 
@@ -90,7 +90,7 @@ export default function NotificationsModal({
       style={[styles.notifCard, !item.read && styles.notifUnread]}
       activeOpacity={0.85}
     >
-      <Image source={{ uri: item.avatar }} style={styles.avatar} />
+      <QuadImage uri={item.avatar } style={styles.avatar} />
       <View style={{ flex: 1, gap: 2 }}>
         <Text style={styles.notifTitle}>{item.title}</Text>
         <Text style={styles.notifMsg}>{item.message}</Text>

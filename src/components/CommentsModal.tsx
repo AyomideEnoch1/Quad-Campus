@@ -1,17 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity,
   KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
-import { Image } from 'expo-image';
+import QuadImage from './QuadImage';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { subscribeComments, addComment } from '../services/commentService';
 import RoleBadge from './RoleBadge';
 import { createNotificationEvent } from '../services/notificationService';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import UserProfileModal from './UserProfileModal';
 
 export default function CommentsModal({ visible, onClose, post, currentUser }: any) {
-  const [comments, setComments] = useState([]);
+  const insets = useSafeAreaInsets();
+  const bottomPadding = Math.max(insets.bottom, 12);
+
+  const [comments, setComments] = useState<any[]>([]);
   const [commentText, setCommentText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [selectedCommentAuthor, setSelectedCommentAuthor] = useState<any>(null);
 
   useEffect(() => {
     if (!post?.id || !visible) return;
@@ -51,15 +58,35 @@ export default function CommentsModal({ visible, onClose, post, currentUser }: a
     }
   };
 
-  const renderComment = ({ item }) => (
+  const renderComment = ({ item }: { item: any }) => (
     <View style={styles.commentRow}>
-      <Image source={{ uri: item.authorAvatar }} style={styles.commentAvatar} />
+      <TouchableOpacity 
+        onPress={() => setSelectedCommentAuthor({
+          uid: item.authorId,
+          displayName: item.authorName,
+          avatarUrl: item.authorAvatar,
+          role: item.authorRole || 'student',
+        })}
+        activeOpacity={0.7}
+      >
+        <QuadImage uri={item.authorAvatar} fallbackIcon="person-circle" style={styles.commentAvatar} />
+      </TouchableOpacity>
+
       <View style={styles.commentBubble}>
         <View style={styles.commentHeader}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <TouchableOpacity 
+            onPress={() => setSelectedCommentAuthor({
+              uid: item.authorId,
+              displayName: item.authorName,
+              avatarUrl: item.authorAvatar,
+              role: item.authorRole || 'student',
+            })}
+            activeOpacity={0.7}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+          >
             <Text style={styles.commentAuthor}>{item.authorName}</Text>
             <RoleBadge role={item.authorRole || 'student'} size={13} />
-          </View>
+          </TouchableOpacity>
           <Text style={styles.commentTime}>{item.createdAt}</Text>
         </View>
         <Text style={styles.commentText}>{item.text}</Text>
@@ -71,7 +98,7 @@ export default function CommentsModal({ visible, onClose, post, currentUser }: a
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView 
         style={styles.overlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={styles.modalCard}>
           {/* Header */}
@@ -96,8 +123,8 @@ export default function CommentsModal({ visible, onClose, post, currentUser }: a
             }
           />
 
-          {/* Input Bar */}
-          <View style={styles.inputBar}>
+          {/* Input Bar with Android Soft Navigation Bar Padding */}
+          <View style={[styles.inputBar, { paddingBottom: bottomPadding }]}>
             <TextInput
               style={styles.input}
               placeholder="Add a comment..."
@@ -119,6 +146,14 @@ export default function CommentsModal({ visible, onClose, post, currentUser }: a
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      <UserProfileModal
+        visible={!!selectedCommentAuthor}
+        onClose={() => setSelectedCommentAuthor(null)}
+        userId={selectedCommentAuthor?.uid}
+        initialUserData={selectedCommentAuthor}
+        currentUser={currentUser}
+      />
     </Modal>
   );
 }
@@ -134,7 +169,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: RADIUS.xl,
     borderTopRightRadius: RADIUS.xl,
     paddingTop: 16,
-    maxHeight: '75%',
+    maxHeight: '80%',
   },
   header: {
     flexDirection: 'row',
@@ -155,8 +190,7 @@ const styles = StyleSheet.create({
   },
   commentRow: {
     flexDirection: 'row',
-    gap: 8,
-    alignItems: 'flex-start',
+    gap: 10,
   },
   commentAvatar: {
     width: 32,
@@ -166,15 +200,14 @@ const styles = StyleSheet.create({
   commentBubble: {
     flex: 1,
     backgroundColor: COLORS.bgInput,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: RADIUS.lg,
-    gap: 2,
+    borderRadius: RADIUS.md,
+    padding: 10,
   },
   commentHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
   },
   commentAuthor: {
     fontSize: 12,
@@ -202,10 +235,12 @@ const styles = StyleSheet.create({
   inputBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    paddingHorizontal: 12,
+    paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: COLORS.borderColor,
     gap: 8,
+    backgroundColor: COLORS.bgCard,
   },
   input: {
     flex: 1,

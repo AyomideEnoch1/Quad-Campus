@@ -19,37 +19,36 @@ import {
 import { Post } from '../types';
 
 export function subscribeFeedPosts(schoolId: string | null, callback: (posts: Post[]) => void): Unsubscribe {
-  let q;
-  if (schoolId) {
-    q = query(
-      collection(db, 'posts'),
-      where('authorSchoolId', '==', schoolId),
-      limit(50)
-    );
-  } else {
-    q = query(
-      collection(db, 'posts'),
-      orderBy('createdAt', 'desc'),
-      limit(50)
-    );
-  }
+  let q = query(
+    collection(db, 'posts'),
+    limit(50)
+  );
 
   return onSnapshot(q, (snapshot) => {
     const posts = snapshot.docs
-      .map(d => ({
-        id: d.id,
-        ...(d.data() as any),
-        createdAt: d.data().createdAt?.toDate
-          ? formatTimeAgo(d.data().createdAt.toDate())
-          : 'Just now',
-        _rawDate: d.data().createdAt?.toDate ? d.data().createdAt.toDate() : new Date()
-      }))
-      .filter(p => (!schoolId ? p.scope === 'all_schools' : true))
+      .map(d => {
+        const data = d.data() as any;
+        return {
+          id: d.id,
+          ...data,
+          createdAt: data.createdAt?.toDate
+            ? formatTimeAgo(data.createdAt.toDate())
+            : 'Just now',
+          _rawDate: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(0)
+        };
+      })
+      .filter(p => {
+        if (schoolId) {
+          return p.authorSchoolId === schoolId;
+        }
+        return true;
+      })
       .sort((a, b) => b._rawDate.getTime() - a._rawDate.getTime());
 
     callback(posts as Post[]);
   }, (err) => {
     console.warn("Feed subscription error:", err?.message || err);
+    callback([]);
   });
 }
 
@@ -103,7 +102,10 @@ export async function createPost({
   return docRef.id;
 }
 
-export async function toggleLikePost(postId: string, userUid: string, isLiked?: boolean): Promise<void> {
+import { createNotificationEvent } from './notificationService';
+import { getDoc } from 'firebase/firestore';
+
+export async function toggleLikePost(postId: string, userUid: string, isLiked?: boolean, currentUser?: any): Promise<void> {
   const postRef = doc(db, 'posts', postId);
   
   if (isLiked) {
@@ -116,6 +118,24 @@ export async function toggleLikePost(postId: string, userUid: string, isLiked?: 
       likesCount: increment(1),
       likedBy: arrayUnion(userUid)
     });
+
+    try {
+      const snap = await getDoc(postRef);
+      if (snap.exists()) {
+        const postData = snap.data();
+        if (postData.authorId && postData.authorId !== userUid) {
+          await createNotificationEvent({
+            userId: postData.authorId,
+            title: 'New Like on your post ❤️',
+            message: `${currentUser?.displayName || 'Someone'} liked your post.`,
+            type: 'like',
+            avatar: currentUser?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80'
+          });
+        }
+      }
+    } catch (e) {
+      console.warn("Like notification notice:", e);
+    }
   }
 }
 

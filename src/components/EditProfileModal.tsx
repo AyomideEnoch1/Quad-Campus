@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, View, Text, TextInput, TouchableOpacity,
   StyleSheet, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
-import { Image } from 'expo-image';
+import QuadImage from './QuadImage';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS, RADIUS } from '../constants/theme';
@@ -123,7 +123,7 @@ export default function EditProfileModal({ visible, onClose, currentUser, onProf
           <ScrollView contentContainerStyle={styles.formContent}>
             {/* Banner Picker */}
             <TouchableOpacity onPress={pickBanner} style={styles.bannerPicker}>
-              <Image source={{ uri: bannerUrl || 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&fm=jpg&fit=crop&q=80' }} style={styles.bannerImg} />
+              <QuadImage uri={bannerUrl || 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&fm=jpg&fit=crop&q=80' } style={styles.bannerImg} />
               <View style={styles.cameraIconOverlay}>
                 <Ionicons name="camera" size={20} color="#fff" />
               </View>
@@ -132,7 +132,7 @@ export default function EditProfileModal({ visible, onClose, currentUser, onProf
             {/* Avatar Picker */}
             <View style={styles.avatarRow}>
               <TouchableOpacity onPress={pickAvatar} style={styles.avatarPicker}>
-                <Image source={{ uri: avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' }} style={styles.avatarImg} />
+                <QuadImage uri={avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' } style={styles.avatarImg} />
                 <View style={styles.avatarCameraOverlay}>
                   <Ionicons name="camera" size={16} color="#fff" />
                 </View>

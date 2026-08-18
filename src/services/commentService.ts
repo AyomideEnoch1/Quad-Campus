@@ -40,6 +40,9 @@ export interface AddCommentParams {
   text: string;
 }
 
+import { createNotificationEvent } from './notificationService';
+import { getDoc } from 'firebase/firestore';
+
 export async function addComment(postId: string, { authorId, authorName, authorAvatar, text }: AddCommentParams): Promise<void> {
   if (!postId || !text.trim()) return;
 
@@ -57,6 +60,24 @@ export async function addComment(postId: string, { authorId, authorName, authorA
   await updateDoc(postRef, {
     commentsCount: increment(1)
   });
+
+  try {
+    const postSnap = await getDoc(postRef);
+    if (postSnap.exists()) {
+      const postData = postSnap.data();
+      if (postData.authorId && postData.authorId !== authorId) {
+        await createNotificationEvent({
+          userId: postData.authorId,
+          title: 'New Comment 💬',
+          message: `${authorName} commented: "${text.trim().slice(0, 35)}${text.length > 35 ? '...' : ''}"`,
+          type: 'comment',
+          avatar: authorAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80'
+        });
+      }
+    }
+  } catch (e) {
+    console.warn("Comment notification notice:", e);
+  }
 }
 
 function formatTimeAgo(date: Date): string {

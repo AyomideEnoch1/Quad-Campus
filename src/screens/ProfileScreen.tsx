@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal } from 'react-native';
-import { Image } from 'expo-image';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal, ActivityIndicator } from 'react-native';
+import * as Updates from 'expo-updates';
+import QuadImage from '../components/QuadImage';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
 import { auth } from '../config/firebase';
@@ -11,7 +12,7 @@ import RoleBadge from '../components/RoleBadge';
 import AdComposerModal from '../components/AdComposerModal';
 import AdsReviewScreen from './AdsReviewScreen';
 
-export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerification, onSignOut }: any) {
+export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerification, onSignOut, onClose }: any) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAdModal, setShowAdModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -62,12 +63,70 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
   };
 
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+
+  const handleCheckUpdate = async () => {
+    try {
+      setIsCheckingUpdate(true);
+      if (__DEV__) {
+        Alert.alert("Development Mode", "Updates cannot be fetched in local development mode.");
+        setIsCheckingUpdate(false);
+        return;
+      }
+      const update = await Updates.checkForUpdateAsync();
+      if (update.isAvailable) {
+        Alert.alert(
+          "Update Available",
+          "A new update is available. Download and apply now?",
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Update Now",
+              onPress: async () => {
+                try {
+                  setIsCheckingUpdate(true);
+                  await Updates.fetchUpdateAsync();
+                  Alert.alert("Update Downloaded", "The app will now restart to apply changes.", [
+                    {
+                      text: "Restart",
+                      onPress: async () => {
+                        await Updates.reloadAsync();
+                      }
+                    }
+                  ]);
+                } catch (err: any) {
+                  Alert.alert("Update Error", err.message || "Failed to download update.");
+                } finally {
+                  setIsCheckingUpdate(false);
+                }
+              }
+            }
+          ]
+        );
+      } else {
+        Alert.alert("Up to Date", "You are already using the latest version of QUAD!");
+      }
+    } catch (err: any) {
+      Alert.alert("Check Failed", err.message || "Unable to check for updates at this time. Please check your internet connection.");
+    } finally {
+      setIsCheckingUpdate(false);
+    }
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
-      {/* Banner with 3-Dots Settings Menu */}
+      {/* Banner with Back Button & 3-Dots Settings Menu */}
       <View style={{ position: 'relative' }}>
-        <Image source={{ uri: currentUser.bannerUrl || 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&fm=jpg&fit=crop&q=80' }} style={styles.banner} />
+        <QuadImage uri={currentUser.bannerUrl || 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&fm=jpg&fit=crop&q=80' } style={styles.banner} />
+        {onClose && (
+          <TouchableOpacity 
+            onPress={onClose} 
+            style={styles.topBackBtn}
+            activeOpacity={0.8}
+          >
+            <Feather name="arrow-left" size={20} color="#fff" />
+          </TouchableOpacity>
+        )}
         <TouchableOpacity 
           onPress={() => setShowSettingsMenu(true)} 
           style={styles.topMenuBtn}
@@ -81,7 +140,7 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
       <View style={styles.headerCard}>
         {/* Avatar */}
         <View style={styles.avatarContainer}>
-          <Image source={{ uri: currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' }} style={styles.avatar} />
+          <QuadImage uri={currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&fm=jpg&fit=crop&q=80' } style={styles.avatar} />
           {currentUser.isVerifiedSchool && (
             <View style={styles.verifiedBadge}>
               <Ionicons name="shield-checkmark" size={12} color="#fff" />
@@ -184,6 +243,29 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
         <TouchableOpacity style={styles.settingsOverlay} activeOpacity={1} onPress={() => setShowSettingsMenu(false)}>
           <View style={styles.settingsSheet} onStartShouldSetResponder={() => true}>
             <Text style={styles.settingsTitle}>Account Settings</Text>
+
+            {/* Check for App Updates */}
+            <TouchableOpacity 
+              onPress={handleCheckUpdate}
+              style={styles.settingsItem}
+              disabled={isCheckingUpdate}
+            >
+              {isCheckingUpdate ? (
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              ) : (
+                <Feather name="download-cloud" size={18} color={COLORS.primary} />
+              )}
+              <View style={{ flex: 1 }}>
+                <Text style={styles.settingsItemText}>
+                  {isCheckingUpdate ? 'Checking for updates...' : 'Check for App Updates'}
+                </Text>
+                <Text style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>
+                  Version {Updates.runtimeVersion || '1.0.0'} • Channel: {Updates.channel || 'main'}
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            <View style={styles.settingsDivider} />
 
             <TouchableOpacity 
               onPress={() => {
@@ -420,6 +502,18 @@ const styles = StyleSheet.create({
   rolePillActive: {
     backgroundColor: COLORS.primaryLight,
     borderColor: COLORS.primary,
+  },
+  topBackBtn: {
+    position: 'absolute',
+    top: 14,
+    left: 14,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
   },
   topMenuBtn: {
     position: 'absolute',
