@@ -23,13 +23,24 @@ export default function MarketScreen({ items: initialItems, currentUser, current
 
   useEffect(() => {
     setLoading(true);
+    const safetyTimer = setTimeout(() => setLoading(false), 2500);
+
     const unsub = subscribeMarketplaceItems(selectedCategory, (liveItems) => {
-      if (liveItems) {
+      clearTimeout(safetyTimer);
+      if (liveItems && liveItems.length > 0) {
         setItems(liveItems);
+      } else if (initialItems && initialItems.length > 0 && selectedCategory === 'All') {
+        setItems(initialItems);
+      } else {
+        setItems([]);
       }
       setLoading(false);
     });
-    return unsub;
+
+    return () => {
+      clearTimeout(safetyTimer);
+      unsub();
+    };
   }, [selectedCategory]);
 
   const filteredItems = items.filter(item => {

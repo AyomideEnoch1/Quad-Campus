@@ -55,13 +55,23 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
 
   useEffect(() => {
     setLoading(true);
-    const schoolIdFilter = feedScope === 'my_school' ? currentSchool.id : null;
+    const safetyTimer = setTimeout(() => setLoading(false), 2500);
+
+    const schoolIdFilter = feedScope === 'my_school' ? (currentSchool?.id || null) : null;
     const unsubFeed = subscribeFeedPosts(schoolIdFilter, (livePosts) => {
-      if (livePosts) {
+      clearTimeout(safetyTimer);
+      if (livePosts && livePosts.length > 0) {
         setPosts(livePosts.map(p => ({
           ...p,
           isLiked: p.likedBy?.includes(currentUser?.uid)
         })));
+      } else if (initialPosts && initialPosts.length > 0) {
+        setPosts(initialPosts.map((p: any) => ({
+          ...p,
+          isLiked: p.likedBy?.includes(currentUser?.uid)
+        })));
+      } else {
+        setPosts([]);
       }
       setLoading(false);
     });
@@ -76,10 +86,11 @@ export default function FeedScreen({ posts: initialPosts, currentSchool, current
     });
 
     return () => {
+      clearTimeout(safetyTimer);
       unsubFeed();
       unsubAds();
     };
-  }, [feedScope, currentSchool.id, currentUser?.uid]);
+  }, [feedScope, currentSchool?.id, currentUser?.uid]);
 
   // Interleave sponsored ads every 8th post
   const combinedFeedData = React.useMemo(() => {

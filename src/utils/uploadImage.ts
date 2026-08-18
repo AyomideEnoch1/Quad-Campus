@@ -12,6 +12,7 @@ export async function uploadImage(
 ): Promise<string | null> {
   if (!localUri) return null;
 
+  // Already a remote URL
   if (localUri.startsWith('http://') || localUri.startsWith('https://')) {
     return localUri;
   }
@@ -33,29 +34,35 @@ export async function uploadImage(
       }
     }
 
-    const blob: Blob = await new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.onload = function () {
-        resolve(xhr.response as Blob);
-      };
-      xhr.onerror = function () {
-        reject(new TypeError("Failed to convert file to blob"));
-      };
-      xhr.responseType = "blob";
-      xhr.open("GET", uploadUri, true);
-      xhr.send(null);
-    });
+    // Convert local URI to Blob reliably using fetch or XHR
+    let blob: Blob;
+    try {
+      const response = await fetch(uploadUri);
+      blob = await response.blob();
+    } catch {
+      blob = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.onload = () => resolve(xhr.response as Blob);
+        xhr.onerror = () => reject(new TypeError("Failed to convert file to blob"));
+        xhr.responseType = "blob";
+        xhr.open("GET", uploadUri, true);
+        xhr.send(null);
+      });
+    }
 
     const ext = isVideo ? 'mp4' : 'jpg';
+    const contentType = isVideo ? 'video/mp4' : 'image/jpeg';
     const filename = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${ext}`;
     const storageRef = ref(storage, `${pathPrefix}/${filename}`);
 
-    await uploadBytes(storageRef, blob);
+    // Upload with metadata
+    await uploadBytes(storageRef, blob, { contentType });
     const downloadUrl = await getDownloadURL(storageRef);
     return downloadUrl;
   } catch (error: any) {
-    console.warn("Firebase Storage Upload Notice (using local file fallback):", error?.message || error);
-    return localUri;
+    console.error("Firebase Storage Upload Error:", error?.message || error);
+    // Do not return local cache URI because it expires and breaks for other users
+    throw new Error(error?.message || "Failed to upload image to cloud storage.");
   }
 }
 
@@ -85,12 +92,18 @@ export async function pickAndUploadImage(
     const isVideo = asset.type === 'video' || localUri.endsWith('.mp4') || localUri.endsWith('.mov');
     const uploadedUrl = await uploadImage(localUri, pathPrefix, isVideo ? 'video' : 'image');
 
+    if (!uploadedUrl) {
+      alert("Failed to upload image. Please try again.");
+      return null;
+    }
+
     return {
-      url: uploadedUrl || localUri,
+      url: uploadedUrl,
       type: isVideo ? 'video' : 'image'
     };
-  } catch (error) {
-    console.warn("Error picking media:", error);
+  } catch (error: any) {
+    console.warn("Error picking/uploading media:", error);
+    alert(error?.message || "Failed to upload image.");
     return null;
   }
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import * as Updates from 'expo-updates';
 import * as Notifications from 'expo-notifications';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
@@ -247,6 +248,22 @@ export default function App() {
   const [flow, setFlow] = useState<'splash' | 'auth' | 'interests' | 'setup_profile' | 'main'>('splash');
   const [currentSchool, setCurrentSchool] = useState<School>(SCHOOLS[0]);
   const [currentUser, setCurrentUser] = useState<UserProfile>(CURRENT_USER);
+
+  useEffect(() => {
+    async function checkUpdates() {
+      try {
+        if (__DEV__) return;
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync();
+          await Updates.reloadAsync();
+        }
+      } catch (e) {
+        // Silently ignore if offline or development
+      }
+    }
+    checkUpdates();
+  }, []);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {

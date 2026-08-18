@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal, ActivityIndicator } from 'react-native';
+import * as Updates from 'expo-updates';
 import QuadImage from '../components/QuadImage';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
@@ -62,6 +63,55 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
   };
 
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+
+  const handleCheckUpdate = async () => {
+    try {
+      setIsCheckingUpdate(true);
+      if (__DEV__) {
+        Alert.alert("Development Mode", "Updates cannot be fetched in local development mode.");
+        setIsCheckingUpdate(false);
+        return;
+      }
+      const update = await Updates.checkForUpdateAsync();
+      if (update.isAvailable) {
+        Alert.alert(
+          "Update Available",
+          "A new update is available. Download and apply now?",
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Update Now",
+              onPress: async () => {
+                try {
+                  setIsCheckingUpdate(true);
+                  await Updates.fetchUpdateAsync();
+                  Alert.alert("Update Downloaded", "The app will now restart to apply changes.", [
+                    {
+                      text: "Restart",
+                      onPress: async () => {
+                        await Updates.reloadAsync();
+                      }
+                    }
+                  ]);
+                } catch (err: any) {
+                  Alert.alert("Update Error", err.message || "Failed to download update.");
+                } finally {
+                  setIsCheckingUpdate(false);
+                }
+              }
+            }
+          ]
+        );
+      } else {
+        Alert.alert("Up to Date", "You are already using the latest version of QUAD!");
+      }
+    } catch (err: any) {
+      Alert.alert("Check Failed", err.message || "Unable to check for updates at this time. Please check your internet connection.");
+    } finally {
+      setIsCheckingUpdate(false);
+    }
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
@@ -193,6 +243,29 @@ export default function ProfileScreen({ currentUser, setCurrentUser, onOpenVerif
         <TouchableOpacity style={styles.settingsOverlay} activeOpacity={1} onPress={() => setShowSettingsMenu(false)}>
           <View style={styles.settingsSheet} onStartShouldSetResponder={() => true}>
             <Text style={styles.settingsTitle}>Account Settings</Text>
+
+            {/* Check for App Updates */}
+            <TouchableOpacity 
+              onPress={handleCheckUpdate}
+              style={styles.settingsItem}
+              disabled={isCheckingUpdate}
+            >
+              {isCheckingUpdate ? (
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              ) : (
+                <Feather name="download-cloud" size={18} color={COLORS.primary} />
+              )}
+              <View style={{ flex: 1 }}>
+                <Text style={styles.settingsItemText}>
+                  {isCheckingUpdate ? 'Checking for updates...' : 'Check for App Updates'}
+                </Text>
+                <Text style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>
+                  Version {Updates.runtimeVersion || '1.0.0'} • Channel: {Updates.channel || 'main'}
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            <View style={styles.settingsDivider} />
 
             <TouchableOpacity 
               onPress={() => {
