@@ -51,32 +51,48 @@ export default function MarketScreen({ items: initialItems, currentUser, current
   const renderItemCard = ({ item }) => (
     <TouchableOpacity 
       style={styles.card}
-      activeOpacity={0.8}
+      activeOpacity={0.85}
       onPress={() => setSelectedDetailItem(item)}
     >
       <View style={styles.imgContainer}>
-        <QuadImage uri={item.imageUrl } style={styles.itemImg} />
-        <View style={styles.pricePill}>
-          <Text style={styles.priceText}>₦{typeof item.price === 'number' ? item.price.toLocaleString() : item.price}</Text>
-        </View>
-        <View style={styles.conditionTag}>
-          <Text style={styles.conditionText}>{item.condition}</Text>
-        </View>
+        <QuadImage uri={item.imageUrl} style={styles.itemImg} />
+        {item.condition ? (
+          <View style={styles.conditionTag}>
+            <Text style={styles.conditionText}>{item.condition}</Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.cardDetails}>
+        <View style={styles.tagRow}>
+          <Text style={styles.categoryTag} numberOfLines={1}>
+            {item.category?.toUpperCase() || 'MARKET'}
+          </Text>
+          <Text style={styles.tagDot}>•</Text>
+          <Text style={styles.schoolTag} numberOfLines={1}>
+            {item.sellerSchoolName || currentSchool?.shortName || 'Campus'}
+          </Text>
+        </View>
+
         <Text style={styles.itemTitle} numberOfLines={2}>{item.title}</Text>
+
+        <Text style={styles.priceText}>
+          ₦{typeof item.price === 'number' ? item.price.toLocaleString() : item.price}
+        </Text>
+
         <View style={styles.cardFooter}>
           <TouchableOpacity 
             onPress={() => setSelectedVendor(item)}
             style={styles.vendorStoreChip}
-            activeOpacity={0.8}
+            activeOpacity={0.7}
           >
-            <Ionicons name="storefront-outline" size={12} color={COLORS.primary} />
+            <Ionicons name="storefront-outline" size={11} color={COLORS.textMain} />
             <Text style={styles.vendorStoreText}>{item.sellerName ? item.sellerName.split(' ')[0] : 'Store'}</Text>
           </TouchableOpacity>
 
-          <Text style={styles.sellerSchool} numberOfLines={1}>🏫 {item.sellerSchoolName || currentSchool?.shortName}</Text>
+          {item.createdAt && (
+            <Text style={styles.timeAgo}>{item.createdAt}</Text>
+          )}
         </View>
       </View>
     </TouchableOpacity>
@@ -89,10 +105,16 @@ export default function MarketScreen({ items: initialItems, currentUser, current
         <Feather name="search" size={18} color={COLORS.textMuted} />
         <TextInput 
           placeholder="Search textbooks, iPads, mini-fridges..."
+          placeholderTextColor={COLORS.textLight}
           value={searchQuery}
           onChangeText={setSearchQuery}
           style={styles.searchInput}
         />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')} activeOpacity={0.7}>
+            <Ionicons name="close-circle" size={18} color={COLORS.textLight} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Category Horizontal Scroll */}
@@ -189,18 +211,26 @@ const styles = StyleSheet.create({
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.bgInput,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: COLORS.borderColor,
     marginHorizontal: 12,
-    marginTop: 10,
-    borderRadius: RADIUS.full,
-    paddingHorizontal: 12,
-    height: 40,
+    marginTop: 12,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 14,
+    height: 44,
     gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
   },
   searchInput: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 14,
     color: COLORS.textMain,
+    paddingVertical: 8,
   },
   categoryScroll: {
     flexDirection: 'row',
@@ -238,72 +268,94 @@ const styles = StyleSheet.create({
     ...COLORS.shadowSm,
   },
   imgContainer: {
-    height: 120,
+    width: '100%',
+    aspectRatio: 1,
     position: 'relative',
+    backgroundColor: COLORS.bgSubtle,
   },
   itemImg: {
     width: '100%',
     height: '100%',
-  },
-  pricePill: {
-    position: 'absolute',
-    bottom: 6,
-    left: 6,
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: RADIUS.full,
-  },
-  priceText: {
-    color: '#fff',
-    fontWeight: '800',
-    fontSize: 12,
+    resizeMode: 'cover',
   },
   conditionTag: {
     position: 'absolute',
-    top: 6,
-    right: 6,
-    backgroundColor: COLORS.primaryLight,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: RADIUS.full,
+    top: 8,
+    right: 8,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: RADIUS.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
   conditionText: {
-    color: COLORS.primary,
+    color: COLORS.textMain,
     fontWeight: '700',
     fontSize: 10,
   },
   cardDetails: {
     padding: 10,
-    gap: 6,
+    gap: 4,
+  },
+  tagRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  categoryTag: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: COLORS.primary,
+    letterSpacing: 0.5,
+  },
+  tagDot: {
+    fontSize: 10,
+    color: COLORS.textLight,
+  },
+  schoolTag: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: COLORS.textMuted,
   },
   itemTitle: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.textMain,
+    lineHeight: 17,
+    height: 34,
+  },
+  priceText: {
+    fontSize: 15,
+    fontWeight: '800',
     color: COLORS.textMain,
   },
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  sellerSchool: {
-    fontSize: 11,
-    color: COLORS.textMuted,
+    marginTop: 4,
   },
   vendorStoreChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    backgroundColor: COLORS.primaryLight,
+    gap: 4,
+    backgroundColor: COLORS.bgInput,
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderRadius: RADIUS.full,
   },
   vendorStoreText: {
     fontSize: 10,
-    fontWeight: '800',
-    color: COLORS.primary,
+    fontWeight: '700',
+    color: COLORS.textMain,
+  },
+  timeAgo: {
+    fontSize: 10,
+    color: COLORS.textLight,
   },
   fabBtn: {
     position: 'absolute',
