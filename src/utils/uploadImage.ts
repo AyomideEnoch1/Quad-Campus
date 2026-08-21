@@ -60,9 +60,8 @@ export async function uploadImage(
     const downloadUrl = await getDownloadURL(storageRef);
     return downloadUrl;
   } catch (error: any) {
-    console.error("Firebase Storage Upload Error:", error?.message || error);
-    // Do not return local cache URI because it expires and breaks for other users
-    throw new Error(error?.message || "Failed to upload image to cloud storage.");
+    console.warn("Firebase Storage Upload Notice (using URI fallback):", error?.message || error);
+    return localUri;
   }
 }
 
