@@ -60,9 +60,46 @@ export async function uploadImage(
     const downloadUrl = await getDownloadURL(storageRef);
     return downloadUrl;
   } catch (error: any) {
-    console.warn("Firebase Storage Upload Notice (using URI fallback):", error?.message || error);
+    console.warn("Firebase Storage unavailable (trying free cloud upload fallback):", error?.message || error);
+    
+    // Free Cloud Image Hosting Fallback (Zero Paid Plan Required)
+    try {
+      const freeImageUrl = await uploadToFreeCloud(localUri);
+      if (freeImageUrl) return freeImageUrl;
+    } catch (fallbackErr) {
+      console.warn("Free cloud upload fallback notice:", fallbackErr);
+    }
+    
     return localUri;
   }
+}
+
+async function uploadToFreeCloud(localUri: string): Promise<string | null> {
+  try {
+    const manipulated = await manipulateAsync(
+      localUri,
+      [{ resize: { width: 900 } }],
+      { compress: 0.7, format: SaveFormat.JPEG, base64: true }
+    );
+
+    if (manipulated.base64) {
+      const formData = new FormData();
+      formData.append('image', manipulated.base64);
+
+      const response = await fetch('https://api.imgbb.com/1/upload?key=d866a1a1f59223f669a842784501a355', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const json = await response.json();
+      if (json && json.data && json.data.url) {
+        return json.data.url;
+      }
+    }
+  } catch (e) {
+    console.warn("Free image host fallback notice:", e);
+  }
+  return null;
 }
 
 export async function pickAndUploadImage(
