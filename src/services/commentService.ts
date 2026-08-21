@@ -17,16 +17,20 @@ export function subscribeComments(postId: string, callback: (comments: PostComme
   if (!postId) return;
 
   const commentsRef = collection(db, 'posts', postId, 'comments');
-  const q = query(commentsRef, orderBy('createdAt', 'asc'));
+  const q = query(commentsRef);
 
   return onSnapshot(q, (snapshot) => {
-    const comments = snapshot.docs.map(d => ({
-      id: d.id,
-      ...(d.data() as any),
-      createdAt: d.data().createdAt?.toDate
-        ? formatTimeAgo(d.data().createdAt.toDate())
-        : 'Just now'
-    }));
+    const comments = snapshot.docs.map(d => {
+      const data = d.data() as any;
+      return {
+        id: d.id,
+        ...data,
+        createdAt: data.createdAt?.toDate
+          ? formatTimeAgo(data.createdAt.toDate())
+          : 'Just now',
+        _rawDate: data.createdAt?.toDate ? data.createdAt.toDate() : new Date()
+      };
+    }).sort((a, b) => a._rawDate.getTime() - b._rawDate.getTime());
     callback(comments as PostComment[]);
   }, (err) => {
     console.warn("Comments subscription error:", err);
