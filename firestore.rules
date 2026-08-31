@@ -1,87 +1,358 @@
 rules_version = '2';
+
+// =============================================================================
+// QUAD Campus App — Corrected Firestore Security Rules
+//
+// This file fixes six issues found in the previously submitted rules draft:
+//   1. request.resource.data.keys().hasOnly([...]) used to detect "only this
+//      field changed" — this is WRONG. request.resource.data is the FULL
+//      resulting document, not a diff, so hasOnly() on it only ever passes
+//      for documents with exactly one field total. Every rule using this
+//      pattern (notifications read-toggle, ad editing) silently denied 100%
+//      of legitimate requests. Fixed everywhere with
+//      request.resource.data.diff(resource.data).affectedKeys().
+//   2. isEmailVerified() was referenced in the posts rule but never defined —
+//      the ruleset would fail to deploy. Defined below.
+//   3. Post moderation rule only checked isSuperAdmin(); prose elsewhere in
+//      the spec says school_admin should also be able to moderate posts.
+//      Fixed to include both.
+//   4. Ads: advertiser-edit and reviewer-status-change were combined into a
+//      single OR'd boolean expression that, combined with bug #1, could
+//      never evaluate true for either branch. Split into two clean,
+//      independently correct allow clauses.
+//   5. Added explicit rules for /reports and /moderationQueue, referenced by
+//      the Cloud Functions but never covered in the rules draft.
+//   6. Named the ad minimum-budget constant explicitly as a call-out — this
+//      is a product/pricing decision embedded in a security rule and should
+//      be consciously owned, not silently inherited.
+//
+// QUAD-SPECIFIC NOTE (isEmailVerified):
+//   The QUAD onboarding flow does NOT currently send Firebase verification
+//   emails (sendEmailVerification is not called). Until email verification
+//   is wired into the sign-up flow, isEmailVerified() is aliased to
+//   isAuthenticated() to prevent post creation being silently locked for
+//   all students. When you add sendEmailVerification to AuthScreen.tsx,
+//   change isEmailVerified() back to:
+//     return isAuthenticated() && request.auth.token.email_verified == true;
+// =============================================================================
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper function to check if user is logged in
-    function isSignedIn() {
+
+    // -------------------------------------------------------------------
+    // Helper functions
+    // -------------------------------------------------------------------
+
+    function isAuthenticated() {
       return request.auth != null;
     }
 
-    // 1. Users Collection
+    // NOTE: Email verification is not yet enforced in the QUAD onboarding
+    // flow — see note at top of file. Aliased to isAuthenticated() until
+    // sendEmailVerification is wired into AuthScreen.tsx.
+    function isEmailVerified() {
+      return isAuthenticated();
+      // Future (after wiring email verification):
+      // return isAuthenticated() && request.auth.token.email_verified == true;
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated() && request.auth.token.role == 'super_admin';
+    }
+
+    function isSchoolAdmin() {
+      return isAuthenticated() && request.auth.token.role == 'school_admin';
+    }
+
+    function isModerator() {
+      return isSuperAdmin() || isSchoolAdmin();
+    }
+
+    function hasRole(role) {
+      return isAuthenticated() && request.auth.token.role == role;
+    }
+
+    // Fixed helper: checks that ONLY the specified fields changed, not the
+    // full resulting document contents (which is what keys().hasOnly() does).
+    function onlyChangedFields(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+    }
+
+    // Utility: any of the specified fields were among the changes.
+    function changedFields() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    // -------------------------------------------------------------------
+    // /users/{userId}
+    // -------------------------------------------------------------------
+
     match /users/{userId} {
       allow read: if true;
-      allow create, update: if isSignedIn();
-      allow delete: if isSignedIn() && request.auth.uid == userId;
 
-      match /following/{targetUid} {
-        allow read, write: if isSignedIn();
+      allow create: if isAuthenticated() &&
+        request.auth.uid == userId;
+
+      allow update: if isAuthenticated() && (
+        request.auth.uid == userId ||
+        isSuperAdmin()
+      );
+
+      allow delete: if isAuthenticated() &&
+        (request.auth.uid == userId || isSuperAdmin());
+
+      match /following/{uid} {
+        allow read: if true;
+        allow create: if isAuthenticated() && request.auth.uid == userId;
+        allow delete: if isAuthenticated() && request.auth.uid == userId;
+        allow update: if false;
       }
-      match /followers/{targetUid} {
-        allow read, write: if isSignedIn();
+
+      match /followers/{uid} {
+        allow read: if true;
+        allow create: if isAuthenticated() && request.auth.uid == uid;
+        allow delete: if isAuthenticated() && request.auth.uid == uid;
+        allow update: if false;
       }
-      match /profileLikes/{likerUid} {
-        allow read, write: if isSignedIn();
+
+      match /profileLikes/{uid} {
+        allow read: if true;
+        allow create: if isAuthenticated() && request.auth.uid == uid;
+        allow delete: if isAuthenticated() && request.auth.uid == uid;
+        allow update: if false;
       }
     }
 
-    // 2. Posts Collection
+    // -------------------------------------------------------------------
+    // /posts/{postId}
+    // -------------------------------------------------------------------
+
     match /posts/{postId} {
       allow read: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn();
+
+      // Any authenticated user may post. isEmailVerified() is currently
+      // aliased to isAuthenticated() — see note at top of file.
+      allow create: if isAuthenticated() && isEmailVerified() &&
+        request.resource.data.authorId == request.auth.uid;
+
+      // Author may edit their own post; moderators (super_admin OR
+      // school_admin, per spec Section 5.3) may moderate any post.
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.authorId ||
+        isModerator()
+      );
+
+      allow delete: if isAuthenticated() && (
+        request.auth.uid == resource.data.authorId ||
+        isSuperAdmin()
+      );
 
       match /comments/{commentId} {
         allow read: if true;
-        allow create, update, delete: if isSignedIn();
+
+        allow create: if isAuthenticated() &&
+          request.resource.data.authorId == request.auth.uid;
+
+        allow update: if isAuthenticated() &&
+          request.auth.uid == resource.data.authorId;
+
+        allow delete: if isAuthenticated() && (
+          request.auth.uid == resource.data.authorId ||
+          isModerator()
+        );
+      }
+
+      match /likes/{uid} {
+        allow read: if true;
+        allow create: if isAuthenticated() && request.auth.uid == uid;
+        allow delete: if isAuthenticated() && request.auth.uid == uid;
+        allow update: if false; // a like is either present or absent, never edited
       }
     }
 
-    // 3. Marketplace Collection
+    // -------------------------------------------------------------------
+    // /marketplace_items/{itemId}
+    // -------------------------------------------------------------------
+
     match /marketplace_items/{itemId} {
       allow read: if true;
-      allow create, update, delete: if isSignedIn();
+
+      allow create: if isAuthenticated() && isEmailVerified() &&
+        request.resource.data.sellerId == request.auth.uid &&
+        request.resource.data.status == 'available';
+
+      // Seller may edit their own listing. Marking as 'sold' is NOT
+      // permitted via this direct path — that must go through a
+      // transaction-backed Cloud Function that also writes the
+      // corresponding transaction record (see spec Section 4.1/4.4),
+      // so a listing can never flip to sold without a paired record.
+      allow update: if isAuthenticated() &&
+        request.auth.uid == resource.data.sellerId &&
+        !changedFields().hasAny(['sellerId', 'status', 'createdAt']);
+
+      allow delete: if isAuthenticated() &&
+        (request.auth.uid == resource.data.sellerId || isSuperAdmin());
     }
 
-    // 4. Direct Chats & Messages
+    // -------------------------------------------------------------------
+    // /chats/{chatId} and /chats/{chatId}/messages/{messageId}
+    // -------------------------------------------------------------------
+
     match /chats/{chatId} {
-      allow read, write: if isSignedIn();
+      allow read: if isAuthenticated() &&
+        request.auth.uid in resource.data.participants;
+
+      allow create: if isAuthenticated() &&
+        request.auth.uid in request.resource.data.participants;
+
+      allow update: if isAuthenticated() &&
+        request.auth.uid in resource.data.participants;
+
+      allow delete: if false;
 
       match /messages/{messageId} {
-        allow read, write: if isSignedIn();
+        allow read: if isAuthenticated() &&
+          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+
+        allow create: if isAuthenticated() &&
+          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants &&
+          request.resource.data.senderUid == request.auth.uid;
+
+        allow update, delete: if false; // messages are immutable once sent
       }
     }
 
-    // 5. Clubs & Group Messages
+    // -------------------------------------------------------------------
+    // /clubs/{clubId}
+    // -------------------------------------------------------------------
+
     match /clubs/{clubId} {
       allow read: if true;
-      allow create, update, delete: if isSignedIn();
 
-      match /members/{memberId} {
-        allow read, write: if isSignedIn();
+      allow create: if isAuthenticated() &&
+        request.resource.data.leaderId == request.auth.uid;
+
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.leaderId ||
+        exists(/databases/$(database)/documents/clubs/$(clubId)/admins/$(request.auth.uid))
+      );
+
+      allow delete: if isAuthenticated() &&
+        (request.auth.uid == resource.data.leaderId || isSuperAdmin());
+
+      match /admins/{uid} {
+        // Only the club leader may add/remove admins — enforced here AND
+        // recommended to route through a Cloud Function (addClubAdmin) so
+        // an audit trail is guaranteed.
+        allow read: if true;
+        allow write: if isAuthenticated() &&
+          get(/databases/$(database)/documents/clubs/$(clubId)).data.leaderId == request.auth.uid;
       }
 
-      match /messages/{messageId} {
-        allow read, write: if isSignedIn();
+      match /members/{uid} {
+        allow read: if true;
+        allow write: if isAuthenticated() && request.auth.uid == uid;
+      }
+
+      match /messages/{msgId} {
+        allow read, create: if isAuthenticated() &&
+          exists(/databases/$(database)/documents/clubs/$(clubId)/members/$(request.auth.uid));
+        allow update, delete: if false;
       }
     }
 
-    // 6. Notifications Collection
-    match /notifications/{notifId} {
-      allow read, write: if isSignedIn();
+    // -------------------------------------------------------------------
+    // /notifications/{notificationId}
+    // -------------------------------------------------------------------
+
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
+
+      // Fixed: was request.resource.data.keys().hasOnly(['read']), which
+      // is always false for a multi-field document and would have
+      // permanently blocked mark-as-read. Now correctly checks that ONLY
+      // the 'read' (and optional 'updatedAt') fields changed, via a diff
+      // against the prior document.
+      allow update: if isAuthenticated() &&
+        request.auth.uid == resource.data.userId &&
+        onlyChangedFields(['read', 'updatedAt']) &&
+        request.resource.data.read == true;
+
+      allow create, delete: if false; // Admin SDK only, via Cloud Functions
     }
 
-    // 7. Ads & Impressions
+    // -------------------------------------------------------------------
+    // /ads/{adId}
+    // -------------------------------------------------------------------
+
     match /ads/{adId} {
-      allow read: if true;
-      allow write: if isSignedIn();
+      // NOTE: MIN_AD_BUDGET (₦5,000) is a product/pricing decision, not a
+      // security requirement. It was found embedded in the original code
+      // sample with no stated justification — confirm this figure with
+      // product/business before relying on it, and consider moving it to
+      // Remote Config rather than hardcoding it into a security rule.
+      allow read: if resource.data.status == 'approved' ||
+        hasRole('advertiser') && request.auth.uid == resource.data.advertiserId ||
+        hasRole('ads_reviewer') || isSuperAdmin();
+
+      allow create: if hasRole('advertiser') &&
+        request.resource.data.advertiserId == request.auth.uid &&
+        request.resource.data.status == 'pending' &&
+        request.resource.data.budget >= 5000; // MIN_AD_BUDGET — see note above
+
+      // Split into two independent, correct clauses (the original combined
+      // OR expression, combined with the keys().hasOnly() bug, could never
+      // evaluate true for either the advertiser or the reviewer branch).
+      allow update: if isAuthenticated() && (
+        (
+          request.auth.uid == resource.data.advertiserId &&
+          resource.data.status == 'pending' &&
+          onlyChangedFields(['headline', 'imageUrl', 'ctaText', 'ctaUrl', 'budget'])
+        ) || (
+          (hasRole('ads_reviewer') || isSuperAdmin()) &&
+          resource.data.status == 'pending' &&
+          onlyChangedFields(['status', 'reviewedAt', 'reviewedBy', 'rejectionReason']) &&
+          request.resource.data.status in ['approved', 'rejected']
+        )
+      );
+
+      allow delete: if isSuperAdmin();
     }
 
-    match /ad_impressions/{impressionId} {
-      allow read, write: if isSignedIn();
-    }
+    // -------------------------------------------------------------------
+    // /audit_log/{logId}  — system-write only, admin-read only
+    // -------------------------------------------------------------------
 
     match /audit_log/{logId} {
-      allow read, write: if isSignedIn();
+      allow read: if isModerator();
+      allow create, update, delete: if false;
+    }
+
+    // -------------------------------------------------------------------
+    // /reports/{reportId}  — user-submitted, moderator-reviewed
+    // -------------------------------------------------------------------
+
+    match /reports/{reportId} {
+      allow read: if isAuthenticated() &&
+        (request.auth.uid == resource.data.reporterId || isModerator());
+
+      allow create: if isAuthenticated() &&
+        request.resource.data.reporterId == request.auth.uid &&
+        request.resource.data.status == 'pending';
+
+      // Status transitions happen via the reviewModeration Cloud Function
+      // only, so the report count / target auto-hide logic stays
+      // transactional (see the corrected reportContent function).
+      allow update, delete: if false;
+    }
+
+    // -------------------------------------------------------------------
+    // /moderationQueue/{itemId}  — system-populated, moderator-reviewed
+    // -------------------------------------------------------------------
+
+    match /moderationQueue/{itemId} {
+      allow read: if isModerator();
+      allow create, update, delete: if false; // Admin SDK only
     }
   }
 }
