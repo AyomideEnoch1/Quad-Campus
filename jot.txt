@@ -1,14 +1,14 @@
 ======Things to Fix======
 
 SEARCH SCREEN
-On the search Page the Status bar is obstructing the Search bar
-Suggestion icons don't work
-Search don't work
+- On the search Page the Status bar is obstructing the Search bar
+- Suggestion icons don't work
+- Search don't work
 
 Post
-Can't create post with pictures or Videos
-Add features like rely, delete comments
-comments are stored like cache, when i open another comment for another post the comment of the last opened post is shown
+- Can't create post with pictures or Videos
+- Add features like rely, delete comments
+- comments are stored like cache, when i open another comment for another post the comment of the last opened post is shown
 
 MARKET SCREEN
 - while searching items on the search bar, make it look like the it is actually searching

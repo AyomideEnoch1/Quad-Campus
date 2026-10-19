@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
+import { Modal, View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import QuadImage from './QuadImage';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS } from '../constants/theme';
@@ -7,6 +7,7 @@ import RoleBadge from './RoleBadge';
 import { collection, query, getDocs, limit } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import UserProfileModal from './UserProfileModal';
+import {SafeAreaView} from "react-native-safe-area-context"
 
 export default function GlobalSearchModal({ visible, onClose, posts = [], marketplaceItems = [], clubs = [], onSelectClub, onSelectListing, currentUser }: any) {
   const [searchQuery, setSearchQuery] = useState('');
