@@ -1,25 +1,47 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ScrollView } from 'react-native';
-import QuadImage from '../components/QuadImage';
-import { Feather, Ionicons } from '@expo/vector-icons';
-import { COLORS, RADIUS } from '../constants/theme';
-import { subscribeMarketplaceItems } from '../services/marketService';
-import CreateItemModal from '../components/CreateItemModal';
-import ItemDetailModal from '../components/ItemDetailModal';
-import VendorStorefrontModal from '../components/VendorStorefrontModal';
-import { MarketCardSkeleton } from '../components/SkeletonLoader';
-import EmptyState from '../components/EmptyState';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  TextInput,
+  ScrollView,
+} from "react-native";
+import QuadImage from "../components/QuadImage";
+import { Feather, Ionicons } from "@expo/vector-icons";
+import { COLORS, RADIUS } from "../constants/theme";
+import { subscribeMarketplaceItems } from "../services/marketService";
+import CreateItemModal from "../components/CreateItemModal";
+import ItemDetailModal from "../components/ItemDetailModal";
+import VendorStorefrontModal from "../components/VendorStorefrontModal";
+import { MarketCardSkeleton } from "../components/SkeletonLoader";
+import EmptyState from "../components/EmptyState";
 
-export default function MarketScreen({ items: initialItems, currentUser, currentSchool, onStartChatWithSeller }: any) {
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
+export default function MarketScreen({
+  items: initialItems,
+  currentUser,
+  currentSchool,
+  onStartChatWithSeller,
+}: any) {
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const [items, setItems] = useState<any[]>(initialItems || []);
   const [loading, setLoading] = useState(true);
   const [showItemModal, setShowItemModal] = useState(false);
   const [selectedDetailItem, setSelectedDetailItem] = useState(null);
   const [selectedVendor, setSelectedVendor] = useState(null);
 
-  const categories = ['All', 'Textbooks', 'Tech & Electronics', 'Dorm & Living', 'Fashion & Apparel', 'Tickets & Passes', 'Services & Tutoring'];
+  const categories = [
+    "All",
+    "Textbooks",
+    "Tech & Electronics",
+    "Dorm & Living",
+    "Fashion & Apparel",
+    "Tickets & Passes",
+    "Services & Tutoring",
+    "Other",
+  ];
 
   useEffect(() => {
     setLoading(true);
@@ -29,7 +51,11 @@ export default function MarketScreen({ items: initialItems, currentUser, current
       clearTimeout(safetyTimer);
       if (liveItems && liveItems.length > 0) {
         setItems(liveItems);
-      } else if (initialItems && initialItems.length > 0 && selectedCategory === 'All') {
+      } else if (
+        initialItems &&
+        initialItems.length > 0 &&
+        selectedCategory === "All"
+      ) {
         setItems(initialItems);
       } else {
         setItems([]);
@@ -43,13 +69,15 @@ export default function MarketScreen({ items: initialItems, currentUser, current
     };
   }, [selectedCategory]);
 
-  const filteredItems = items.filter(item => {
-    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredItems = items.filter((item) => {
+    const matchesSearch = item.title
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
     return matchesSearch;
   });
 
   const renderItemCard = ({ item }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.card}
       activeOpacity={0.85}
       onPress={() => setSelectedDetailItem(item)}
@@ -66,28 +94,39 @@ export default function MarketScreen({ items: initialItems, currentUser, current
       <View style={styles.cardDetails}>
         <View style={styles.tagRow}>
           <Text style={styles.categoryTag} numberOfLines={1}>
-            {item.category?.toUpperCase() || 'MARKET'}
+            {item.category?.toUpperCase() || "MARKET"}
           </Text>
           <Text style={styles.tagDot}>•</Text>
           <Text style={styles.schoolTag} numberOfLines={1}>
-            {item.sellerSchoolName || currentSchool?.shortName || 'Campus'}
+            {item.sellerSchoolName || currentSchool?.shortName || "Campus"}
           </Text>
         </View>
 
-        <Text style={styles.itemTitle} numberOfLines={2}>{item.title}</Text>
+        <Text style={styles.itemTitle} numberOfLines={2}>
+          {item.title}
+        </Text>
 
         <Text style={styles.priceText}>
-          ₦{typeof item.price === 'number' ? item.price.toLocaleString() : item.price}
+          ₦
+          {typeof item.price === "number"
+            ? item.price.toLocaleString()
+            : item.price}
         </Text>
 
         <View style={styles.cardFooter}>
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => setSelectedVendor(item)}
             style={styles.vendorStoreChip}
             activeOpacity={0.7}
           >
-            <Ionicons name="storefront-outline" size={11} color={COLORS.textMain} />
-            <Text style={styles.vendorStoreText}>{item.sellerName ? item.sellerName.split(' ')[0] : 'Store'}</Text>
+            <Ionicons
+              name="storefront-outline"
+              size={11}
+              color={COLORS.textMain}
+            />
+            <Text style={styles.vendorStoreText}>
+              {item.sellerName ? item.sellerName.split(" ")[0] : "Store"}
+            </Text>
           </TouchableOpacity>
 
           {item.createdAt && (
@@ -103,7 +142,7 @@ export default function MarketScreen({ items: initialItems, currentUser, current
       {/* Search Input */}
       <View style={styles.searchBox}>
         <Feather name="search" size={18} color={COLORS.textMuted} />
-        <TextInput 
+        <TextInput
           placeholder="Search textbooks, iPads, mini-fridges..."
           placeholderTextColor={COLORS.textLight}
           value={searchQuery}
@@ -111,7 +150,10 @@ export default function MarketScreen({ items: initialItems, currentUser, current
           style={styles.searchInput}
         />
         {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')} activeOpacity={0.7}>
+          <TouchableOpacity
+            onPress={() => setSearchQuery("")}
+            activeOpacity={0.7}
+          >
             <Ionicons name="close-circle" size={18} color={COLORS.textLight} />
           </TouchableOpacity>
         )}
@@ -119,19 +161,27 @@ export default function MarketScreen({ items: initialItems, currentUser, current
 
       {/* Category Horizontal Scroll */}
       <View style={{ height: 44, marginVertical: 8 }}>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false} 
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoryScroll}
         >
-          {categories.map(cat => (
+          {categories.map((cat) => (
             <TouchableOpacity
               key={cat}
               onPress={() => setSelectedCategory(cat)}
-              style={[styles.catBtn, selectedCategory === cat && styles.catActive]}
+              style={[
+                styles.catBtn,
+                selectedCategory === cat && styles.catActive,
+              ]}
               activeOpacity={0.8}
             >
-              <Text style={[styles.catText, selectedCategory === cat && styles.catTextActive]}>
+              <Text
+                style={[
+                  styles.catText,
+                  selectedCategory === cat && styles.catTextActive,
+                ]}
+              >
                 {cat}
               </Text>
             </TouchableOpacity>
@@ -141,18 +191,22 @@ export default function MarketScreen({ items: initialItems, currentUser, current
 
       {/* 2-Column Listing Grid */}
       {loading ? (
-        <View style={{ flexDirection: 'row', paddingHorizontal: 12, gap: 12 }}>
+        <View style={{ flexDirection: "row", paddingHorizontal: 12, gap: 12 }}>
           <MarketCardSkeleton />
           <MarketCardSkeleton />
         </View>
       ) : (
         <FlatList
           data={filteredItems}
-          keyExtractor={item => item.id}
+          keyExtractor={(item) => item.id}
           numColumns={2}
           renderItem={renderItemCard}
-          columnWrapperStyle={{ justifyContent: 'space-between' }}
-          contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 80, gap: 12 }}
+          columnWrapperStyle={{ justifyContent: "space-between" }}
+          contentContainerStyle={{
+            paddingHorizontal: 12,
+            paddingBottom: 80,
+            gap: 12,
+          }}
           ListEmptyComponent={
             <EmptyState
               icon="cart-outline"
@@ -166,8 +220,8 @@ export default function MarketScreen({ items: initialItems, currentUser, current
       )}
 
       {/* Floating Sell Item Button */}
-      <TouchableOpacity 
-        onPress={() => setShowItemModal(true)} 
+      <TouchableOpacity
+        onPress={() => setShowItemModal(true)}
         style={styles.fabBtn}
         activeOpacity={0.85}
       >
@@ -209,9 +263,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bgMain,
   },
   searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: COLORS.borderColor,
     marginHorizontal: 12,
@@ -220,7 +274,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     height: 44,
     gap: 8,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 3,
@@ -233,8 +287,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   categoryScroll: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 12,
     gap: 8,
   },
@@ -252,41 +306,41 @@ const styles = StyleSheet.create({
   },
   catText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.textMain,
   },
   catTextActive: {
-    color: '#fff',
+    color: "#fff",
   },
   card: {
-    width: '48%',
+    width: "48%",
     backgroundColor: COLORS.bgCard,
     borderRadius: RADIUS.lg,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 1,
     borderColor: COLORS.borderColor,
     ...COLORS.shadowSm,
   },
   imgContainer: {
-    width: '100%',
+    width: "100%",
     aspectRatio: 1,
-    position: 'relative',
+    position: "relative",
     backgroundColor: COLORS.bgSubtle,
   },
   itemImg: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
   },
   conditionTag: {
-    position: 'absolute',
+    position: "absolute",
     top: 8,
     right: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: RADIUS.sm,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
@@ -294,7 +348,7 @@ const styles = StyleSheet.create({
   },
   conditionText: {
     color: COLORS.textMain,
-    fontWeight: '700',
+    fontWeight: "700",
     fontSize: 10,
   },
   cardDetails: {
@@ -302,13 +356,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   tagRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   categoryTag: {
     fontSize: 9,
-    fontWeight: '800',
+    fontWeight: "800",
     color: COLORS.primary,
     letterSpacing: 0.5,
   },
@@ -318,30 +372,30 @@ const styles = StyleSheet.create({
   },
   schoolTag: {
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.textMuted,
   },
   itemTitle: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.textMain,
     lineHeight: 17,
     height: 34,
   },
   priceText: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: "800",
     color: COLORS.textMain,
   },
   cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginTop: 4,
   },
   vendorStoreChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
     backgroundColor: COLORS.bgInput,
     paddingHorizontal: 8,
@@ -350,7 +404,7 @@ const styles = StyleSheet.create({
   },
   vendorStoreText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: "700",
     color: COLORS.textMain,
   },
   timeAgo: {
@@ -358,11 +412,11 @@ const styles = StyleSheet.create({
     color: COLORS.textLight,
   },
   fabBtn: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 20,
     right: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -371,8 +425,8 @@ const styles = StyleSheet.create({
     ...COLORS.shadowMd,
   },
   fabText: {
-    color: '#fff',
-    fontWeight: '800',
+    color: "#fff",
+    fontWeight: "800",
     fontSize: 13,
-  }
+  },
 });
