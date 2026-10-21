@@ -1,17 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
-import QuadImage from './QuadImage';
-import { Ionicons, Feather } from '@expo/vector-icons';
-import { COLORS, RADIUS } from '../constants/theme';
-import RoleBadge from './RoleBadge';
-import { collection, query, getDocs, limit } from 'firebase/firestore';
-import { db } from '../config/firebase';
-import UserProfileModal from './UserProfileModal';
-import {SafeAreaView} from "react-native-safe-area-context"
+import React, { useState, useEffect } from "react";
+import {
+  Modal,
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  ScrollView,
+} from "react-native";
+import QuadImage from "./QuadImage";
+import { Ionicons, Feather } from "@expo/vector-icons";
+import { COLORS, RADIUS } from "../constants/theme";
+import RoleBadge from "./RoleBadge";
+import { collection, query, getDocs, limit } from "firebase/firestore";
+import { db } from "../config/firebase";
+import UserProfileModal from "./UserProfileModal";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function GlobalSearchModal({ visible, onClose, posts = [], marketplaceItems = [], clubs = [], onSelectClub, onSelectListing, currentUser }: any) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'users' | 'posts' | 'market' | 'clubs'
+export default function GlobalSearchModal({
+  visible,
+  onClose,
+  posts = [],
+  marketplaceItems = [],
+  clubs = [],
+  onSelectClub,
+  onSelectListing,
+  currentUser,
+}: any) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("all"); // 'all' | 'users' | 'posts' | 'market' | 'clubs'
   const [usersList, setUsersList] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [selectedSearchUser, setSelectedSearchUser] = useState<any>(null);
@@ -21,8 +40,8 @@ export default function GlobalSearchModal({ visible, onClose, posts = [], market
     const fetchUsers = async () => {
       try {
         setLoadingUsers(true);
-        const snap = await getDocs(query(collection(db, 'users'), limit(50)));
-        const users = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const snap = await getDocs(query(collection(db, "users"), limit(50)));
+        const users = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         setUsersList(users);
       } catch (err) {
         console.warn("GlobalSearch user fetch notice:", err?.message || err);
@@ -35,31 +54,48 @@ export default function GlobalSearchModal({ visible, onClose, posts = [], market
 
   const queryClean = searchQuery.trim().toLowerCase();
 
-  const filteredUsers = !queryClean ? usersList.slice(0, 5) : usersList.filter(u =>
-    u.displayName?.toLowerCase().includes(queryClean) ||
-    u.username?.toLowerCase().includes(queryClean) ||
-    u.schoolName?.toLowerCase().includes(queryClean)
-  );
+  const filteredUsers = !queryClean
+    ? usersList.slice(0, 5)
+    : usersList.filter(
+        (u) =>
+          u.displayName?.toLowerCase().includes(queryClean) ||
+          u.username?.toLowerCase().includes(queryClean) ||
+          u.schoolName?.toLowerCase().includes(queryClean),
+      );
 
-  const filteredPosts = !queryClean ? [] : posts.filter(p => 
-    p.content?.toLowerCase().includes(queryClean) ||
-    p.authorName?.toLowerCase().includes(queryClean)
-  );
+  const filteredPosts = !queryClean
+    ? []
+    : posts.filter(
+        (p) =>
+          p.content?.toLowerCase().includes(queryClean) ||
+          p.authorName?.toLowerCase().includes(queryClean),
+      );
 
-  const filteredItems = !queryClean ? [] : marketplaceItems.filter(i => 
-    i.title?.toLowerCase().includes(queryClean) ||
-    i.category?.toLowerCase().includes(queryClean) ||
-    i.sellerName?.toLowerCase().includes(queryClean)
-  );
+  const filteredItems = !queryClean
+    ? []
+    : marketplaceItems.filter(
+        (i) =>
+          i.title?.toLowerCase().includes(queryClean) ||
+          i.category?.toLowerCase().includes(queryClean) ||
+          i.sellerName?.toLowerCase().includes(queryClean),
+      );
 
-  const filteredClubs = !queryClean ? [] : clubs.filter(c => 
-    c.name?.toLowerCase().includes(queryClean) ||
-    c.tagline?.toLowerCase().includes(queryClean) ||
-    c.category?.toLowerCase().includes(queryClean)
-  );
+  const filteredClubs = !queryClean
+    ? []
+    : clubs.filter(
+        (c) =>
+          c.name?.toLowerCase().includes(queryClean) ||
+          c.tagline?.toLowerCase().includes(queryClean) ||
+          c.category?.toLowerCase().includes(queryClean),
+      );
 
   return (
-    <Modal visible={visible} animationType="fade" presentationStyle="fullScreen" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      animationType="fade"
+      presentationStyle="fullScreen"
+      onRequestClose={onClose}
+    >
       <SafeAreaView style={styles.container}>
         {/* Top Search Bar */}
         <View style={styles.topBar}>
@@ -68,7 +104,11 @@ export default function GlobalSearchModal({ visible, onClose, posts = [], market
           </TouchableOpacity>
 
           <View style={styles.searchBox}>
-            <Ionicons name="search-outline" size={18} color={COLORS.textMuted} />
+            <Ionicons
+              name="search-outline"
+              size={18}
+              color={COLORS.textMuted}
+            />
             <TextInput
               style={styles.input}
               placeholder="Search students, posts, market, clubs..."
@@ -78,30 +118,51 @@ export default function GlobalSearchModal({ visible, onClose, posts = [], market
               autoFocus
             />
             {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Ionicons name="close-circle" size={18} color={COLORS.textMuted} />
+              <TouchableOpacity onPress={() => setSearchQuery("")}>
+                <Ionicons
+                  name="close-circle"
+                  size={18}
+                  color={COLORS.textMuted}
+                />
               </TouchableOpacity>
             )}
           </View>
         </View>
 
         {/* Category Tabs */}
-        <View style={styles.tabRow}>
-          {[
-            { id: 'all', label: 'All Results' },
-            { id: 'users', label: `Users (${filteredUsers.length})` },
-            { id: 'posts', label: `Posts (${filteredPosts.length})` },
-            { id: 'market', label: `Market (${filteredItems.length})` },
-            { id: 'clubs', label: `Clubs (${filteredClubs.length})` },
-          ].map(t => (
-            <TouchableOpacity
-              key={t.id}
-              onPress={() => setActiveTab(t.id)}
-              style={[styles.tabPill, activeTab === t.id && styles.tabPillActive]}
-            >
-              <Text style={[styles.tabText, activeTab === t.id && styles.tabTextActive]}>{t.label}</Text>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.tabBarWrapper}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tabRow}
+          >
+            {[
+              { id: "all", label: "All Results" },
+              { id: "users", label: `Users (${filteredUsers.length})` },
+              { id: "posts", label: `Posts (${filteredPosts.length})` },
+              { id: "market", label: `Market (${filteredItems.length})` },
+              { id: "clubs", label: `Clubs (${filteredClubs.length})` },
+            ].map((t) => (
+              <TouchableOpacity
+                key={t.id}
+                activeOpacity={0.7}
+                onPress={() => setActiveTab(t.id)}
+                style={[
+                  styles.tabPill,
+                  activeTab === t.id && styles.tabPillActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeTab === t.id && styles.tabTextActive,
+                  ]}
+                >
+                  {t.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
 
         {/* Results List */}
@@ -109,34 +170,57 @@ export default function GlobalSearchModal({ visible, onClose, posts = [], market
           <View style={styles.emptyState}>
             <Ionicons name="search" size={48} color={COLORS.textLight} />
             <Text style={styles.emptyTitle}>Search QUAD</Text>
-            <Text style={styles.emptySub}>Search students by name, campus posts, products, and student clubs.</Text>
+            <Text style={styles.emptySub}>
+              Search students by name, campus posts, products, and student
+              clubs.
+            </Text>
           </View>
         ) : (
           <FlatList
             data={[
-              ...(activeTab === 'all' || activeTab === 'users' ? filteredUsers.map(u => ({ ...u, _type: 'user' })) : []),
-              ...(activeTab === 'all' || activeTab === 'posts' ? filteredPosts.map(p => ({ ...p, _type: 'post' })) : []),
-              ...(activeTab === 'all' || activeTab === 'market' ? filteredItems.map(i => ({ ...i, _type: 'item' })) : []),
-              ...(activeTab === 'all' || activeTab === 'clubs' ? filteredClubs.map(c => ({ ...c, _type: 'club' })) : []),
+              ...(activeTab === "all" || activeTab === "users"
+                ? filteredUsers.map((u) => ({ ...u, _type: "user" }))
+                : []),
+              ...(activeTab === "all" || activeTab === "posts"
+                ? filteredPosts.map((p) => ({ ...p, _type: "post" }))
+                : []),
+              ...(activeTab === "all" || activeTab === "market"
+                ? filteredItems.map((i) => ({ ...i, _type: "item" }))
+                : []),
+              ...(activeTab === "all" || activeTab === "clubs"
+                ? filteredClubs.map((c) => ({ ...c, _type: "club" }))
+                : []),
             ]}
             keyExtractor={(item, index) => `${item._type}_${item.id}_${index}`}
             contentContainerStyle={{ padding: 14, gap: 12 }}
             renderItem={({ item }) => {
-              if (item._type === 'user') {
+              if (item._type === "user") {
                 return (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     onPress={() => setSelectedSearchUser(item)}
                     style={styles.resultCard}
                     activeOpacity={0.7}
                   >
                     <View style={styles.cardHeader}>
-                      <QuadImage uri={item.avatarUrl} fallbackIcon="person-circle" style={styles.avatar} />
+                      <QuadImage
+                        uri={item.avatarUrl}
+                        fallbackIcon="person-circle"
+                        style={styles.avatar}
+                      />
                       <View style={{ flex: 1 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 4,
+                          }}
+                        >
                           <Text style={styles.name}>{item.displayName}</Text>
-                          <RoleBadge role={item.role || 'student'} size={14} />
+                          <RoleBadge role={item.role || "student"} size={14} />
                         </View>
-                        <Text style={styles.sub}>@{item.username} • {item.schoolName}</Text>
+                        <Text style={styles.sub}>
+                          @{item.username} • {item.schoolName}
+                        </Text>
                       </View>
                       <View style={styles.badgePill}>
                         <Text style={styles.badgeText}>User</Text>
@@ -145,37 +229,56 @@ export default function GlobalSearchModal({ visible, onClose, posts = [], market
                   </TouchableOpacity>
                 );
               }
-              if (item._type === 'post') {
+              if (item._type === "post") {
                 return (
                   <View style={styles.resultCard}>
-                    <TouchableOpacity 
-                      onPress={() => setSelectedSearchUser({
-                        uid: item.authorId,
-                        displayName: item.authorName,
-                        avatarUrl: item.authorAvatar,
-                        schoolName: item.authorSchoolName,
-                        role: item.authorRole || 'student',
-                      })}
+                    <TouchableOpacity
+                      onPress={() =>
+                        setSelectedSearchUser({
+                          uid: item.authorId,
+                          displayName: item.authorName,
+                          avatarUrl: item.authorAvatar,
+                          schoolName: item.authorSchoolName,
+                          role: item.authorRole || "student",
+                        })
+                      }
                       style={styles.cardHeader}
                       activeOpacity={0.7}
                     >
-                      <QuadImage uri={item.authorAvatar} fallbackIcon="person-circle" style={styles.avatar} />
+                      <QuadImage
+                        uri={item.authorAvatar}
+                        fallbackIcon="person-circle"
+                        style={styles.avatar}
+                      />
                       <View style={{ flex: 1 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 4,
+                          }}
+                        >
                           <Text style={styles.name}>{item.authorName}</Text>
-                          <RoleBadge role={item.authorRole || 'student'} size={14} />
+                          <RoleBadge
+                            role={item.authorRole || "student"}
+                            size={14}
+                          />
                         </View>
-                        <Text style={styles.sub}>Post • {item.authorSchoolName}</Text>
+                        <Text style={styles.sub}>
+                          Post • {item.authorSchoolName}
+                        </Text>
                       </View>
                     </TouchableOpacity>
-                    <Text style={styles.bodyText} numberOfLines={2}>{item.content}</Text>
+                    <Text style={styles.bodyText} numberOfLines={2}>
+                      {item.content}
+                    </Text>
                   </View>
                 );
               }
 
-              if (item._type === 'item') {
+              if (item._type === "item") {
                 return (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     onPress={() => {
                       onClose();
                       if (onSelectListing) onSelectListing(item);
@@ -183,20 +286,27 @@ export default function GlobalSearchModal({ visible, onClose, posts = [], market
                     style={styles.resultCard}
                   >
                     <View style={styles.cardHeader}>
-                      <QuadImage uri={item.imageUrl || item.image } style={styles.itemThumb} />
+                      <QuadImage
+                        uri={item.imageUrl || item.image}
+                        style={styles.itemThumb}
+                      />
                       <View style={{ flex: 1 }}>
                         <Text style={styles.name}>{item.title}</Text>
-                        <Text style={styles.price}>₦{item.price?.toLocaleString()}</Text>
-                        <Text style={styles.sub}>Market Listing • {item.category}</Text>
+                        <Text style={styles.price}>
+                          ₦{item.price?.toLocaleString()}
+                        </Text>
+                        <Text style={styles.sub}>
+                          Market Listing • {item.category}
+                        </Text>
                       </View>
                     </View>
                   </TouchableOpacity>
                 );
               }
 
-              if (item._type === 'club') {
+              if (item._type === "club") {
                 return (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     onPress={() => {
                       onClose();
                       if (onSelectClub) onSelectClub(item);
@@ -204,10 +314,16 @@ export default function GlobalSearchModal({ visible, onClose, posts = [], market
                     style={styles.resultCard}
                   >
                     <View style={styles.cardHeader}>
-                      <QuadImage uri={item.logoUrl || item.logo } style={styles.avatar} />
+                      <QuadImage
+                        uri={item.logoUrl || item.logo}
+                        style={styles.avatar}
+                      />
                       <View style={{ flex: 1 }}>
                         <Text style={styles.name}>{item.name}</Text>
-                        <Text style={styles.sub}>{item.tagline || 'Campus Club'} • {item.memberCount || 1} members</Text>
+                        <Text style={styles.sub}>
+                          {item.tagline || "Campus Club"} •{" "}
+                          {item.memberCount || 1} members
+                        </Text>
                       </View>
                       <View style={styles.badgePill}>
                         <Text style={styles.badgeText}>View Club</Text>
@@ -240,8 +356,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.bgMain,
   },
   topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 14,
     paddingVertical: 10,
     backgroundColor: COLORS.bgCard,
@@ -254,13 +370,13 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     backgroundColor: COLORS.bgInput,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   searchBox: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: COLORS.bgInput,
     borderRadius: RADIUS.full,
     paddingHorizontal: 12,
@@ -272,14 +388,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textMain,
   },
-  tabRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    gap: 8,
+  tabBarWrapper: {
     backgroundColor: COLORS.bgCard,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.borderColor,
+  },
+  tabRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    gap: 8,
   },
   tabPill: {
     paddingHorizontal: 12,
@@ -295,28 +414,28 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 12,
     color: COLORS.textMuted,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   tabTextActive: {
     color: COLORS.primary,
-    fontWeight: '800',
+    fontWeight: "800",
   },
   emptyState: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 32,
     gap: 10,
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: "800",
     color: COLORS.textMain,
   },
   emptySub: {
     fontSize: 13,
     color: COLORS.textMuted,
-    textAlign: 'center',
+    textAlign: "center",
   },
   resultCard: {
     backgroundColor: COLORS.bgCard,
@@ -327,8 +446,8 @@ const styles = StyleSheet.create({
     borderColor: COLORS.borderColor,
   },
   cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
   },
   avatar: {
@@ -343,12 +462,12 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: "800",
     color: COLORS.textMain,
   },
   price: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: "800",
     color: COLORS.primary,
   },
   sub: {
@@ -369,6 +488,6 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 11,
     color: COLORS.primary,
-    fontWeight: '800',
-  }
+    fontWeight: "800",
+  },
 });
